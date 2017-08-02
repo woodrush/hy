@@ -1,4 +1,4 @@
-import hy  # NOQA
+import hyhy  # NOQA
 import imp
 import sys
 

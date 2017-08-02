@@ -205,7 +205,7 @@ Notice the last two lines: Hy has a fraction literal like Clojure.
 
 If you start Hy like this (a shell alias might be helpful)::
 
-  $ hy --repl-output-fn=hy.contrib.hy-repr.hy-repr
+  $ hy --repl-output-fn=hyhy.contrib.hy-repr.hy-repr
 
 the interactive mode will use :ref:`hy-repr-fn` instead of Python's
 native ``repr`` function to print out values, so you'll see values in
@@ -620,7 +620,7 @@ If you save the following in ``greetings.hy``:
 Then you can use it directly from Python, by importing Hy before importing
 the module. In Python::
 
-    import hy
+    import hyhy
     import greetings
 
     greetings.greet("Foo")

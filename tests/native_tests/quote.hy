@@ -43,7 +43,7 @@
   (assert (= (get q 1) (quote bar)))
   (assert (= (get q 2) (quote baz)))
   (assert (= (get q 3) (quote quux)))
-  (assert (= (type q) hy.HyDict)))
+  (assert (= (type q) hyhy.HyDict)))
 
 
 (defn test-quote-expr-in-dict []

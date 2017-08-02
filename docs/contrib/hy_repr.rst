@@ -4,14 +4,14 @@ Hy representations
 
 .. versionadded:: 0.13.0
 
-``hy.contrib.hy-repr`` is a module containing a single function.
+``hyhy.contrib.hy-repr`` is a module containing a single function.
 To import it, say::
 
-  (import [hy.contrib.hy-repr [hy-repr]])
+  (import [hyhy.contrib.hy-repr [hy-repr]])
 
 To make the Hy REPL use it for output, invoke Hy like so::
 
-  $ hy --repl-output-fn=hy.contrib.hy-repr.hy-repr
+  $ hy --repl-output-fn=hyhy.contrib.hy-repr.hy-repr
 
 .. _hy-repr-fn:
 

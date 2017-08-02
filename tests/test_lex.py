@@ -3,9 +3,9 @@
 # license. See the LICENSE.
 
 from math import isnan
-from hy.models import (HyExpression, HyInteger, HyFloat, HyComplex, HySymbol,
+from hyhy.models import (HyExpression, HyInteger, HyFloat, HyComplex, HySymbol,
                        HyString, HyDict, HyList, HySet, HyCons)
-from hy.lex import LexException, PrematureEndOfInput, tokenize
+from hyhy.lex import LexException, PrematureEndOfInput, tokenize
 import pytest
 
 def peoi(): return pytest.raises(PrematureEndOfInput)
@@ -380,7 +380,7 @@ def test_lex_mangling_bang():
 
 def test_unmangle():
     import sys
-    f = sys.modules["hy.lex.parser"].hy_symbol_unmangle
+    f = sys.modules["hyhy.lex.parser"].hy_symbol_unmangle
 
     assert f("FOO") == "*foo*"
     assert f("<") == "<"

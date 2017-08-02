@@ -4,9 +4,9 @@
 
 from rply.errors import LexingError
 
-from hy.lex.exceptions import LexException, PrematureEndOfInput  # NOQA
-from hy.lex.lexer import lexer
-from hy.lex.parser import parser
+from hyhy.lex.exceptions import LexException, PrematureEndOfInput  # NOQA
+from hyhy.lex.lexer import lexer
+from hyhy.lex.parser import parser
 
 
 def tokenize(buf):

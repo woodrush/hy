@@ -2,9 +2,9 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
-from hy.macros import macroexpand
-from hy.compiler import HyTypeError, HyASTCompiler
-from hy.lex import tokenize
+from hyhy.macros import macroexpand
+from hyhy.compiler import HyTypeError, HyASTCompiler
+from hyhy.lex import tokenize
 
 
 def test_tag_macro_error():

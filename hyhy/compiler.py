@@ -3,19 +3,19 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
-from hy.models import (HyObject, HyExpression, HyKeyword, HyInteger, HyComplex,
+from hyhy.models import (HyObject, HyExpression, HyKeyword, HyInteger, HyComplex,
                        HyString, HyBytes, HySymbol, HyFloat, HyList, HySet,
                        HyDict, HyCons, wrap_value)
-from hy.errors import HyCompileError, HyTypeError
+from hyhy.errors import HyCompileError, HyTypeError
 
-from hy.lex.parser import hy_symbol_mangle
+from hyhy.lex.parser import hy_symbol_mangle
 
-import hy.macros
-from hy._compat import (
+import hyhy.macros
+from hyhy._compat import (
     str_type, string_types, bytes_type, long_type, PY3, PY34, PY35,
     raise_empty)
-from hy.macros import require, macroexpand, tag_macroexpand
-import hy.importer
+from hyhy.macros import require, macroexpand, tag_macroexpand
+import hyhy.importer
 
 import traceback
 import importlib
@@ -38,7 +38,7 @@ _compile_time_ns = {}
 def compile_time_ns(module_name):
     ns = _compile_time_ns.get(module_name)
     if ns is None:
-        ns = {'hy': hy, '__name__': module_name}
+        ns = {'hyhy': hyhy, '__name__': module_name}
         _compile_time_ns[module_name] = ns
     return ns
 
@@ -47,8 +47,8 @@ _stdlib = {}
 
 
 def load_stdlib():
-    import hy.core
-    for module in hy.core.STDLIB:
+    import hyhy.core
+    for module in hyhy.core.STDLIB:
         mod = importlib.import_module(module)
         for e in mod.EXPORTS:
             if getattr(mod, e) is not getattr(builtins, e, ''):
@@ -67,7 +67,7 @@ def _is_hy_builtin(name, module_name):
         return True
     # for non-Hy modules, check for pre-existing name in
     # _compile_table
-    if not module_name.startswith("hy."):
+    if not module_name.startswith("hyhy."):
         return name in _compile_table
     return False
 
@@ -369,13 +369,13 @@ def is_unpack(kind, x):
 class HyASTCompiler(object):
 
     def __init__(self, module_name):
-        self.allow_builtins = module_name.startswith("hy.core")
+        self.allow_builtins = module_name.startswith("hyhy.core")
         self.anon_fn_count = 0
         self.anon_var_count = 0
         self.imports = defaultdict(set)
         self.module_name = module_name
         self.temp_if = None
-        if not module_name.startswith("hy.core"):
+        if not module_name.startswith("hyhy.core"):
             # everything in core needs to be explicit.
             load_stdlib()
 
@@ -754,7 +754,7 @@ class HyASTCompiler(object):
             level = 0
         imports, stmts, splice = self._render_quoted_form(entries[1], level)
         ret = self.compile(stmts)
-        ret.add_imports("hy", imports)
+        ret.add_imports("hyhy", imports)
         return ret
 
     @builds("unquote")
@@ -2379,13 +2379,13 @@ class HyASTCompiler(object):
         """Compile-time hack: we want to get our new macro now
         We must provide __name__ in the namespace to make the Python
         compiler set the __module__ attribute of the macro function."""
-        hy.importer.hy_eval(expression,
+        hyhy.importer.hy_eval(expression,
                             compile_time_ns(self.module_name),
                             self.module_name)
 
-        # We really want to have a `hy` import to get hy.macro in
+        # We really want to have a `hy` import to get hyhy.macro in
         ret = self.compile(expression)
-        ret.add_imports('hy', [None])
+        ret.add_imports('hyhy', [None])
         return ret
 
     @builds("defmacro")
@@ -2401,7 +2401,7 @@ class HyASTCompiler(object):
             if kw in expression[0]:
                 raise HyTypeError(name, "macros cannot use %s" % kw)
         new_expression = HyExpression([
-            HyExpression([HySymbol("hy.macros.macro"), name]),
+            HyExpression([HySymbol("hyhy.macros.macro"), name]),
             HyExpression([HySymbol("fn")] + expression),
         ]).replace(expression)
 
@@ -2422,7 +2422,7 @@ class HyASTCompiler(object):
                                "for tag macro name" % type(name).__name__))
         name = HyString(name).replace(name)
         new_expression = HyExpression([
-            HyExpression([HySymbol("hy.macros.tag"), name]),
+            HyExpression([HySymbol("hyhy.macros.tag"), name]),
             HyExpression([HySymbol("fn")] + expression),
         ]).replace(expression)
 
@@ -2448,7 +2448,7 @@ class HyASTCompiler(object):
     @builds("eval_and_compile")
     def compile_eval_and_compile(self, expression):
         expression[0] = HySymbol("do")
-        hy.importer.hy_eval(expression,
+        hyhy.importer.hy_eval(expression,
                             compile_time_ns(self.module_name),
                             self.module_name)
         expression.pop(0)
@@ -2457,7 +2457,7 @@ class HyASTCompiler(object):
     @builds("eval_when_compile")
     def compile_eval_when_compile(self, expression):
         expression[0] = HySymbol("do")
-        hy.importer.hy_eval(expression,
+        hyhy.importer.hy_eval(expression,
                             compile_time_ns(self.module_name),
                             self.module_name)
         return Result()

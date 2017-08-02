@@ -24,7 +24,7 @@ are mixins of a base Python class and :ref:`HyObject`.
 HyObject
 ~~~~~~~~
 
-``hy.models.HyObject`` is the base class of Hy models. It only
+``hyhy.models.HyObject`` is the base class of Hy models. It only
 implements one method, ``replace``, which replaces the source position
 of the current object with the one passed as argument. This allows us to
 keep track of the original position of expressions that get modified by
@@ -44,7 +44,7 @@ Hy parser.
 HyList
 ~~~~~~
 
-``hy.models.HyList`` is the base class of "iterable" Hy models. Its
+``hyhy.models.HyList`` is the base class of "iterable" Hy models. Its
 basic use is to represent bracketed ``[]`` lists, which, when used as a
 top-level expression, translate to Python list literals in the
 compilation phase.
@@ -58,7 +58,7 @@ objects in a macro, for instance.
 HyExpression
 ~~~~~~~~~~~~
 
-``hy.models.HyExpression`` inherits :ref:`HyList` for
+``hyhy.models.HyExpression`` inherits :ref:`HyList` for
 parenthesized ``()`` expressions. The compilation result of those
 expressions depends on the first element of the list: the compiler
 dispatches expressions between compiler special-forms, user-defined
@@ -69,7 +69,7 @@ macros, and regular Python function calls.
 HyDict
 ~~~~~~
 
-``hy.models.HyDict`` inherits :ref:`HyList` for curly-bracketed ``{}``
+``hyhy.models.HyDict`` inherits :ref:`HyList` for curly-bracketed ``{}``
 expressions, which compile down to a Python dictionary literal.
 
 The decision of using a list instead of a dict as the base class for
@@ -101,7 +101,7 @@ the following order:
 HyString
 ~~~~~~~~
 
-``hy.models.HyString`` is the base class of string-equivalent Hy
+``hyhy.models.HyString`` is the base class of string-equivalent Hy
 models. It also represents double-quoted string literals, ``""``, which
 compile down to unicode string literals in Python. ``HyStrings`` inherit
 unicode objects in Python 2, and string objects in Python 3 (and are
@@ -116,7 +116,7 @@ strings.
 HyBytes
 ~~~~~~~
 
-``hy.models.HyBytes`` is like ``HyString``, but for sequences of bytes.
+``hyhy.models.HyBytes`` is like ``HyString``, but for sequences of bytes.
 It inherits from ``bytes`` on Python 3 and ``str`` on Python 2.
 
 .. _hy_numeric_models:
@@ -124,12 +124,12 @@ It inherits from ``bytes`` on Python 3 and ``str`` on Python 2.
 Numeric Models
 ~~~~~~~~~~~~~~
 
-``hy.models.HyInteger`` represents integer literals (using the
+``hyhy.models.HyInteger`` represents integer literals (using the
 ``long`` type on Python 2, and ``int`` on Python 3).
 
-``hy.models.HyFloat`` represents floating-point literals.
+``hyhy.models.HyFloat`` represents floating-point literals.
 
-``hy.models.HyComplex`` represents complex literals.
+``hyhy.models.HyComplex`` represents complex literals.
 
 Numeric models are parsed using the corresponding Python routine, and
 valid numeric python literals will be turned into their Hy counterpart.
@@ -139,7 +139,7 @@ valid numeric python literals will be turned into their Hy counterpart.
 HySymbol
 ~~~~~~~~
 
-``hy.models.HySymbol`` is the model used to represent symbols
+``hyhy.models.HySymbol`` is the model used to represent symbols
 in the Hy language. It inherits :ref:`HyString`.
 
 ``HySymbol`` objects are mangled in the parsing phase, to help Python
@@ -159,7 +159,7 @@ source code. Such a mechanism is used by :ref:`gensym` to generate
 HyKeyword
 ~~~~~~~~~
 
-``hy.models.HyKeyword`` represents keywords in Hy. Keywords are
+``hyhy.models.HyKeyword`` represents keywords in Hy. Keywords are
 symbols starting with a ``:``. See :ref:`syntax-keywords`.
 
 .. _hycons:
@@ -167,7 +167,7 @@ symbols starting with a ``:``. See :ref:`syntax-keywords`.
 Cons Cells
 ==========
 
-``hy.models.HyCons`` is a representation of Python-friendly `cons
+``hyhy.models.HyCons`` is a representation of Python-friendly `cons
 cells`_.  Cons cells are especially useful to mimic features of "usual"
 LISP variants such as Scheme or Common Lisp.
 
@@ -225,9 +225,9 @@ The first stage of compiling Hy is to lex the source into tokens that we can
 deal with. We use a project called rply, which is a really nice (and fast)
 parser, written in a subset of Python called rpython.
 
-The lexing code is all defined in ``hy.lex.lexer``. This code is mostly just
+The lexing code is all defined in ``hyhy.lex.lexer``. This code is mostly just
 defining the Hy grammar, and all the actual hard parts are taken care of by
-rply -- we just define "callbacks" for rply in ``hy.lex.parser``, which takes
+rply -- we just define "callbacks" for rply in ``hyhy.lex.parser``, which takes
 the tokens generated, and returns the Hy models.
 
 You can think of the Hy models as the "AST" for Hy, it's what Macros operate
@@ -281,7 +281,7 @@ Macro-Expand
 ~~~~~~~~~~~~
 
 If we get a ``HyExpression``, we'll attempt to see if this is a known
-Macro, and push to have it expanded by invoking ``hy.macros.macroexpand``, then
+Macro, and push to have it expanded by invoking ``hyhy.macros.macroexpand``, then
 push the result back into ``HyASTCompiler.compile``.
 
 Second Stage Expression-Dispatch

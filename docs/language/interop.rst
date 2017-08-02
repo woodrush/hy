@@ -82,13 +82,13 @@ If you save the following in ``greetings.hy``:
 Then you can use it directly from Python, by importing Hy before importing
 the module. In Python::
 
-    import hy
+    import hyhy
     import greetings
 
     greetings.greet("Foo") # prints "Hello from hy, Foo"
     print(THIS_WILL_BE_IN_CAPS_AND_UNDERSCORES) # prints "See?"
 
-If you create a package with Hy code, and you do the ``import hy`` in
+If you create a package with Hy code, and you do the ``import hyhy`` in
 ``__init__.py``, you can then directly include the package. Of course, Hy still
 has to be installed.
 
@@ -102,7 +102,7 @@ statement will be generated, and Hy will have to be installed.
 
 Even if you do not use a Hy builtin, but just another function or variable with
 the name of a Hy builtin, the ``import`` will be generated. For example, the previous code
-causes the import of ``name`` from ``hy.core.language``.
+causes the import of ``name`` from ``hyhy.core.language``.
 
 **Bottom line: in most cases, Hy has to be installed.**
 
@@ -111,8 +111,8 @@ Launching a Hy REPL from Python
 
 You can use the function ``run_repl()`` to launch the Hy REPL from Python::
 
-    >>> import hy.cmdline
-    >>> hy.cmdline.run_repl()
+    >>> import hyhy.cmdline
+    >>> hyhy.cmdline.run_repl()
     hy 0.12.1 using CPython(default) 3.6.0 on Linux
     => (defn foo [] (print "bar"))
     => (test)
@@ -121,8 +121,8 @@ You can use the function ``run_repl()`` to launch the Hy REPL from Python::
 If you want to print the Python code Hy generates for you, use the ``spy``
 argument::
 
-    >>> import hy.cmdline
-    >>> hy.cmdline.run_repl(spy=True)
+    >>> import hyhy.cmdline
+    >>> hyhy.cmdline.run_repl(spy=True)
     hy 0.12.1 using CPython(default) 3.6.0 on Linux
     => (defn test [] (print "bar"))
     def test():

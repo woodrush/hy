@@ -1,5 +1,5 @@
-from hy.macros import macro
-from hy import HyList, HyInteger
+from hyhy.macros import macro
+from hyhyimport HyList, HyInteger
 
 
 @macro("qplah")

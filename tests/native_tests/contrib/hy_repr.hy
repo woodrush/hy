@@ -4,7 +4,7 @@
 
 (import
   [math [isnan]]
-  [hy.contrib.hy-repr [hy-repr]])
+  [hyhy.contrib.hy-repr [hy-repr]])
 
 (defn test-hy-repr-roundtrip-from-value []
   ; Test that a variety of values round-trip properly.
@@ -66,11 +66,11 @@
     (assert (= rep original-str))))
 
 (defn test-hy-model-constructors []
-  (import hy)
-  (assert (= (hy-repr (hy.HyInteger 7)) "'7"))
-  (assert (= (hy-repr (hy.HyString "hello")) "'\"hello\""))
-  (assert (= (hy-repr (hy.HyList [1 2 3])) "'[1 2 3]"))
-  (assert (= (hy-repr (hy.HyDict [1 2 3])) "'{1 2 3}")))
+  (import hyhy)
+  (assert (= (hy-repr (hyhy.HyInteger 7)) "'7"))
+  (assert (= (hy-repr (hyhy.HyString "hello")) "'\"hello\""))
+  (assert (= (hy-repr (hyhy.HyList [1 2 3])) "'[1 2 3]"))
+  (assert (= (hy-repr (hyhy.HyDict [1 2 3])) "'{1 2 3}")))
 
 (defn test-hy-repr-self-reference []
 

@@ -4,9 +4,9 @@
 
 import ast
 
-from hy import compiler
-from hy.models import HyExpression, HyList, HySymbol, HyInteger
-from hy._compat import PY3
+from hyhyimport compiler
+from hyhy.models import HyExpression, HyList, HySymbol, HyInteger
+from hyhy._compat import PY3
 
 
 def test_builds_with_dash():

@@ -2,9 +2,9 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
-from hy.importer import (import_file_to_module, import_buffer_to_ast,
+from hyhy.importer import (import_file_to_module, import_buffer_to_ast,
                          MetaLoader, get_bytecode_path)
-from hy.errors import HyTypeError
+from hyhy.errors import HyTypeError
 import os
 import ast
 import tempfile

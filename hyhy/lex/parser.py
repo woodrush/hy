@@ -7,8 +7,8 @@ from ast import literal_eval
 
 from rply import ParserGenerator
 
-from hy._compat import PY3, str_type
-from hy.models import (HyBytes, HyComplex, HyCons, HyDict, HyExpression,
+from hyhy._compat import PY3, str_type
+from hyhy.models import (HyBytes, HyComplex, HyCons, HyDict, HyExpression,
                        HyFloat, HyInteger, HyKeyword, HyList, HySet, HyString,
                        HySymbol)
 from .lexer import lexer

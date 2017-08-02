@@ -14,6 +14,6 @@ also includes all Python reserved words. All names are in unmangled form
 
 .. code-block:: hy
 
-   => (import hy.extra.reserved)
-   => (in "defclass" (hy.extra.reserved.names))
+   => (import hyhy.extra.reserved)
+   => (in "defclass" (hyhy.extra.reserved.names))
    True

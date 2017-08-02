@@ -13,23 +13,23 @@ import importlib
 
 import astor.codegen
 
-import hy
+import hyhy
 
-from hy.lex import LexException, PrematureEndOfInput
-from hy.lex.parser import hy_symbol_mangle
-from hy.compiler import HyTypeError
-from hy.importer import (hy_eval, import_buffer_to_module,
+from hyhy.lex import LexException, PrematureEndOfInput
+from hyhy.lex.parser import hy_symbol_mangle
+from hyhy.compiler import HyTypeError
+from hyhy.importer import (hy_eval, import_buffer_to_module,
                          import_file_to_ast, import_file_to_hst,
                          import_buffer_to_ast, import_buffer_to_hst)
-from hy.completer import completion
-from hy.completer import Completer
+from hyhy.completer import completion
+from hyhy.completer import Completer
 
-from hy.errors import HyIOError
+from hyhy.errors import HyIOError
 
-from hy.macros import macro, require
-from hy.models import HyExpression, HyString, HySymbol
+from hyhy.macros import macro, require
+from hyhy.models import HyExpression, HyString, HySymbol
 
-from hy._compat import builtins, PY3
+from hyhy._compat import builtins, PY3
 
 
 class HyQuitter(object):
@@ -170,8 +170,8 @@ def ideas_macro():
 
 """)])
 
-require("hy.cmdline", "__console__", all_macros=True)
-require("hy.cmdline", "__main__", all_macros=True)
+require("hyhy.cmdline", "__console__", all_macros=True)
+require("hyhy.cmdline", "__main__", all_macros=True)
 
 SIMPLE_TRACEBACKS = True
 
@@ -192,19 +192,19 @@ def run_command(source):
 
 
 def run_module(mod_name):
-    from hy.importer import MetaImporter
+    from hyhy.importer import MetaImporter
     pth = MetaImporter().find_on_path(mod_name)
     if pth is not None:
         sys.argv = [pth] + sys.argv
         return run_file(pth)
 
-    print("{0}: module '{1}' not found.\n".format(hy.__appname__, mod_name),
+    print("{0}: module '{1}' not found.\n".format(hyhy.__appname__, mod_name),
           file=sys.stderr)
     return 1
 
 
 def run_file(filename):
-    from hy.importer import import_file_to_module
+    from hyhy.importer import import_file_to_module
     pretty_error(import_file_to_module, "__main__", filename)
     return 0
 
@@ -223,8 +223,8 @@ def run_repl(hr=None, **kwargs):
 
         hr.interact("{appname} {version} using "
                     "{py}({build}) {pyversion} on {os}".format(
-                        appname=hy.__appname__,
-                        version=hy.__version__,
+                        appname=hyhy.__appname__,
+                        version=hyhy.__version__,
                         py=platform.python_implementation(),
                         build=platform.python_build()[0],
                         pyversion=platform.python_version(),
@@ -247,7 +247,7 @@ def run_icommand(source, **kwargs):
 
 
 USAGE = "%(prog)s [-h | -i cmd | -c cmd | -m module | file | -] [arg] ..."
-VERSION = "%(prog)s " + hy.__version__
+VERSION = "%(prog)s " + hyhy.__version__
 EPILOG = """  file         program read from script
   module       module to execute as main
   -            program read from stdin
@@ -272,7 +272,7 @@ def cmdline_handler(scriptname, argv):
                         help="print equivalent Python code before executing")
     parser.add_argument("--repl-output-fn",
                         help="function for printing REPL output "
-                             "(e.g., hy.contrib.hy-repr.hy-repr)")
+                             "(e.g., hyhy.contrib.hy-repr.hy-repr)")
     parser.add_argument("-v", "--version", action="version", version=VERSION)
 
     parser.add_argument("--show-tracebacks", action="store_true",
@@ -284,7 +284,7 @@ def cmdline_handler(scriptname, argv):
 
     # stash the hy executable in case we need it later
     # mimics Python sys.executable
-    hy.executable = argv[0]
+    hyhy.executable = argv[0]
 
     # need to split the args if using "-m"
     # all args after the MOD are sent to the module
@@ -343,7 +343,7 @@ def hy_main():
 
 # entry point for cmd line script "hyc"
 def hyc_main():
-    from hy.importer import write_hy_as_pyc
+    from hyhy.importer import write_hy_as_pyc
     parser = argparse.ArgumentParser(prog="hyc")
     parser.add_argument("files", metavar="FILE", nargs='+',
                         help="file to compile")

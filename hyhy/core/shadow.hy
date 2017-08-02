@@ -5,7 +5,7 @@
 ;;;; Hy shadow functions
 
 (import operator)
-(import [hy._compat [PY35]])
+(import [hyhy._compat [PY35]])
 
 
 (defn + [&rest args]

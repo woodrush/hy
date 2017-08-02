@@ -1,6 +1,6 @@
 import _pytest
-import hy
-from hy._compat import PY3, PY35
+import hyhy
+from hyhy._compat import PY3, PY35
 
 def pytest_collect_file(parent, path):
     if (path.ext == ".hy"

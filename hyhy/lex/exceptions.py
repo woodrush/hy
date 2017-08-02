@@ -2,7 +2,7 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
-from hy.errors import HyError
+from hyhy.errors import HyError
 
 
 class LexException(HyError):
@@ -16,7 +16,7 @@ class LexException(HyError):
         self.filename = '<stdin>'
 
     def __str__(self):
-        from hy.errors import colored
+        from hyhy.errors import colored
 
         line = self.lineno
         start = self.colno

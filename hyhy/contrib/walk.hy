@@ -3,7 +3,7 @@
 ;; This file is part of Hy, which is free software licensed under the Expat
 ;; license. See the LICENSE.
 
-(import [hy [HyExpression HyDict]]
+(import [hyhy [HyExpression HyDict]]
         [functools [partial]])
 
 (defn walk [inner outer form]

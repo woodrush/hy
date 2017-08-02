@@ -7,8 +7,8 @@
 import os
 import subprocess
 import re
-from hy._compat import PY3, PY35
-from hy.importer import get_bytecode_path
+from hyhy._compat import PY3, PY35
+from hyhy.importer import get_bytecode_path
 import pytest
 
 
@@ -16,7 +16,7 @@ hy_dir = os.environ.get('HY_DIR', '')
 
 
 def hr(s=""):
-    return "hy --repl-output-fn=hy.contrib.hy-repr.hy-repr " + s
+    return "hy --repl-output-fn=hyhy.contrib.hy-repr.hy-repr " + s
 
 
 def run_cmd(cmd, stdin_data=None, expect=0, dontwritebytecode=False):
@@ -221,7 +221,7 @@ def test_hy2py():
 
 
 def test_bin_hy_builtins():
-    import hy.cmdline  # NOQA
+    import hyhy.cmdline  # NOQA
 
     assert str(exit) == "Use (exit) or Ctrl-D (i.e. EOF) to exit"
     assert str(quit) == "Use (quit) or Ctrl-D (i.e. EOF) to exit"

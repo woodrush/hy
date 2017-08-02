@@ -3,7 +3,7 @@
 ;; This file is part of Hy, which is free software licensed under the Expat
 ;; license. See the LICENSE.
 
-(import hy sys keyword)
+(import hyhy sys keyword)
 
 (setv _cache None)
 
@@ -13,12 +13,12 @@
   The result of the first call is cached."
   (global _cache)
   (if (is _cache None) (do
-    (setv unmangle (. sys.modules ["hy.lex.parser"] hy_symbol_unmangle))
+    (setv unmangle (. sys.modules ["hyhy.lex.parser"] hy_symbol_unmangle))
     (setv _cache (frozenset (map unmangle (+
-      hy.core.language.*exports*
-      hy.core.shadow.*exports*
-      (list (.keys (get hy.macros._hy_macros None)))
+      hyhy.core.language.*exports*
+      hyhy.core.shadow.*exports*
+      (list (.keys (get hyhy.macros._hy_macros None)))
       keyword.kwlist
-      (list-comp k [k (.keys hy.compiler.-compile-table)]
-        (isinstance k hy._compat.string-types))))))))
+      (list-comp k [k (.keys hyhy.compiler.-compile-table)]
+        (isinstance k hyhy._compat.string-types))))))))
   _cache)

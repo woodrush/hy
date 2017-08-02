@@ -4,7 +4,7 @@
 
 from __future__ import unicode_literals
 from math import isnan, isinf
-from hy._compat import PY3, str_type, bytes_type, long_type, string_types
+from hyhy._compat import PY3, str_type, bytes_type, long_type, string_types
 from fractions import Fraction
 
 

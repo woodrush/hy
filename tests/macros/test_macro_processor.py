@@ -2,13 +2,13 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
-from hy.macros import macro, macroexpand
-from hy.lex import tokenize
+from hyhy.macros import macro, macroexpand
+from hyhy.lex import tokenize
 
-from hy.models import HyString, HyList, HySymbol, HyExpression
-from hy.errors import HyMacroExpansionError
+from hyhy.models import HyString, HyList, HySymbol, HyExpression
+from hyhy.errors import HyMacroExpansionError
 
-from hy.compiler import HyASTCompiler
+from hyhy.compiler import HyASTCompiler
 
 
 @macro("test")

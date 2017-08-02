@@ -3,7 +3,7 @@ import os, subprocess, runpy
 # Try to get and update the version.
 
 os.chdir(os.path.split(os.path.abspath(__file__))[0])
-VERSIONFILE = os.path.join("hy", "version.py")
+VERSIONFILE = os.path.join("hyhy", "version.py")
 
 try:
     __version__ = (subprocess.check_output

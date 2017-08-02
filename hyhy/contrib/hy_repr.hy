@@ -4,8 +4,8 @@
 
 (import
   [math [isnan]]
-  [hy._compat [PY3 str-type bytes-type long-type]]
-  [hy.models [HyObject HyExpression HySymbol HyKeyword HyInteger HyFloat HyComplex HyList HyDict HySet HyString HyBytes]])
+  [hyhy._compat [PY3 str-type bytes-type long-type]]
+  [hyhy.models [HyObject HyExpression HySymbol HyKeyword HyInteger HyFloat HyComplex HyList HyDict HySet HyString HyBytes]])
 
 (defn hy-repr [obj]
   (setv seen (set))

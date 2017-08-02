@@ -7,11 +7,11 @@
         [sys :as systest]
         re
         [operator [or_]]
-        [hy.errors [HyTypeError]]
+        [hyhy.errors [HyTypeError]]
         pytest)
 (import sys)
 
-(import [hy._compat [PY3 PY34 PY35]])
+(import [hyhy._compat [PY3 PY34 PY35]])
 
 (defn test-sys-argv []
   "NATIVE: test sys.argv"
@@ -1384,7 +1384,7 @@
 
 (defn test-calling-module-name []
   "NATIVE: Test the calling-module-name function"
-  (assert (= (calling-module-name -1) "hy.core.language")))
+  (assert (= (calling-module-name -1) "hyhy.core.language")))
 
 
 (defn test-disassemble []
@@ -1436,7 +1436,7 @@
   (if-python2
     (import [StringIO [StringIO]])
     (import [io [StringIO]]))
-  (import [hy.models [HyExpression]])
+  (import [hyhy.models [HyExpression]])
 
   (def stdin-buffer (StringIO "(+ 2 2)\n(- 2 2)"))
   (assert (= (eval (read stdin-buffer)) 4))

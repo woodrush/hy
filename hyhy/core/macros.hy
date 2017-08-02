@@ -4,10 +4,10 @@
 ;; license. See the LICENSE.
 
 ;;; These macros form the hy language
-;;; They are automatically required in every module, except inside hy.core
+;;; They are automatically required in every module, except inside hyhy.core
 
 
-(import [hy.models [HyList HySymbol]])
+(import [hyhy.models [HyList HySymbol]])
 
 (defmacro as-> [head name &rest rest]
   "Expands to sequence of assignments to the provided name, starting with head.

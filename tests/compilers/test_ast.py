@@ -4,13 +4,13 @@
 
 from __future__ import unicode_literals
 
-from hy import HyString
-from hy.models import HyObject
-from hy.compiler import hy_compile
-from hy.importer import import_buffer_to_hst
-from hy.errors import HyCompileError, HyTypeError
-from hy.lex.exceptions import LexException
-from hy._compat import PY3
+from hyhyimport HyString
+from hyhy.models import HyObject
+from hyhy.compiler import hy_compile
+from hyhy.importer import import_buffer_to_hst
+from hyhy.errors import HyCompileError, HyTypeError
+from hyhy.lex.exceptions import LexException
+from hyhy._compat import PY3
 
 import ast
 

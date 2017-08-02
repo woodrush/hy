@@ -5,7 +5,7 @@
 import os
 import imp
 import tempfile
-from hy.importer import write_hy_as_pyc, get_bytecode_path
+from hyhy.importer import write_hy_as_pyc, get_bytecode_path
 
 
 def test_pyc():

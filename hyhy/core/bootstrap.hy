@@ -4,7 +4,7 @@
 ;; license. See the LICENSE.
 
 ;;; These macros are the essential hy macros.
-;;; They are automatically required everywhere, even inside hy.core modules.
+;;; They are automatically required everywhere, even inside hyhy.core modules.
 
 (defmacro if [&rest args]
   "if with elif"
@@ -18,14 +18,14 @@
 
 (defmacro macro-error [location reason]
   "error out properly within a macro"
-  `(raise (hy.errors.HyMacroExpansionError ~location ~reason)))
+  `(raise (hyhy.errors.HyMacroExpansionError ~location ~reason)))
 
 (defmacro defn [name lambda-list &rest body]
   "define a function `name` with signature `lambda-list` and body `body`"
-  (import hy)
-  (if (not (= (type name) hy.HySymbol))
+  (import hyhy)
+  (if (not (= (type name) hyhy.HySymbol))
     (macro-error name "defn takes a name as first argument"))
-  (if (not (isinstance lambda-list hy.HyList))
+  (if (not (isinstance lambda-list hyhy.HyList))
     (macro-error name "defn takes a parameter list as second argument"))
   `(setv ~name (fn* ~lambda-list ~@body)))
 

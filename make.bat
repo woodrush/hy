@@ -126,7 +126,7 @@ if "%1" == "clean" (
    for /r %%R in (__pycache__) do if EXIST %%R (rmdir /S /Q %%R)
    if EXIST .tox\NUL cmd /C rmdir /S /Q .tox
    if EXIST dist\NUL cmd /C rmdir /S /Q dist
-   if EXIST hy.egg-info\NUL cmd /C rmdir /S /Q hy.egg-info
+   if EXIST hyhy.egg-info\NUL cmd /C rmdir /S /Q hyhy.egg-info
    if EXIST docs\_build\NUL cmd /C rmdir /S /Q docs\_build
    goto :EOF
 )

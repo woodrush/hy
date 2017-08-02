@@ -15,11 +15,11 @@
 (if-python2
   (import [StringIO [StringIO]])
   (import [io [StringIO]]))
-(import [hy._compat [long-type]]) ; long for python2, int for python3
-(import [hy.models [HyCons HySymbol HyKeyword]])
-(import [hy.lex [LexException PrematureEndOfInput tokenize]])
-(import [hy.compiler [HyASTCompiler spoof-positions]])
-(import [hy.importer [hy-eval :as eval]])
+(import [hyhy._compat [long-type]]) ; long for python2, int for python3
+(import [hyhy.models [HyCons HySymbol HyKeyword]])
+(import [hyhy.lex [LexException PrematureEndOfInput tokenize]])
+(import [hyhy.compiler [HyASTCompiler spoof-positions]])
+(import [hyhy.importer [hy-eval :as eval]])
 
 (defn butlast [coll]
   "Returns coll except of last element."
@@ -73,10 +73,10 @@
   "Return the python AST for a quoted Hy tree as a string.
    If the second argument is true, generate python code instead."
   (import astor)
-  (import hy.compiler)
+  (import hyhy.compiler)
 
   (spoof-positions tree)
-  (setv compiled (hy.compiler.hy-compile tree (calling-module-name)))
+  (setv compiled (hyhy.compiler.hy-compile tree (calling-module-name)))
   ((if codegen
             astor.codegen.to_source
             astor.dump)
@@ -109,7 +109,7 @@
    zip-longest itertools.zip_longest
    ;; was builtin in Python2
    reduce functools.reduce
-   ;; Someone can import these directly from `hy.core.language`;
+   ;; Someone can import these directly from `hyhy.core.language`;
    ;; we'll make some duplicates.
    filter filter
    input input
@@ -289,17 +289,17 @@
 
 (defn macroexpand [form]
   "Return the full macro expansion of form"
-  (import hy.macros)
+  (import hyhy.macros)
 
   (setv name (calling-module-name))
-  (hy.macros.macroexpand form (HyASTCompiler name)))
+  (hyhy.macros.macroexpand form (HyASTCompiler name)))
 
 (defn macroexpand-1 [form]
   "Return the single step macro expansion of form"
-  (import hy.macros)
+  (import hyhy.macros)
 
   (setv name (calling-module-name))
-  (hy.macros.macroexpand-1 form (HyASTCompiler name)))
+  (hyhy.macros.macroexpand-1 form (HyASTCompiler name)))
 
 (defn merge-with [f &rest maps]
   "Returns a map that consists of the rest of the maps joined onto

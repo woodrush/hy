@@ -2,10 +2,10 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
-from hy.compiler import hy_compile, HyTypeError
-from hy.models import HyObject, HyExpression, HySymbol, replace_hy_obj
-from hy.lex import tokenize, LexException
-from hy.errors import HyIOError
+from hyhy.compiler import hy_compile, HyTypeError
+from hyhy.models import HyObject, HyExpression, HySymbol, replace_hy_obj
+from hyhy.lex import tokenize, LexException
+from hyhy.errors import HyIOError
 
 from io import open
 import re
@@ -18,8 +18,8 @@ import inspect
 import os
 import __future__
 
-from hy._compat import PY3, PY34, MAGIC, builtins, long_type, wr_long
-from hy._compat import string_types
+from hyhy._compat import PY3, PY34, MAGIC, builtins, long_type, wr_long
+from hyhy._compat import string_types
 
 
 def ast_compile(ast, filename, mode):

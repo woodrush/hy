@@ -6,7 +6,7 @@
 ;;; The loop/recur macro allows you to construct functions that use tail-call
 ;;; optimization to allow arbitrary levels of recursion.
 
-(import [hy.contrib.walk [prewalk]])
+(import [hyhy.contrib.walk [prewalk]])
 
 (defn --trampoline-- [f]
   "Wrap f function and make it tail-call optimized."
@@ -37,7 +37,7 @@
     (fn [x] (if (and (symbol? x) (= x "recur")) g!recur-fn x))
     body))
   `(do
-    (import [hy.contrib.loop [--trampoline--]])
+    (import [hyhy.contrib.loop [--trampoline--]])
     (with-decorator
       --trampoline--
       (defn ~g!recur-fn [~@signature] ~@new-body))
@@ -47,8 +47,8 @@
 (defmacro defnr [name lambda-list &rest body]
   (if (not (= (type name) HySymbol))
     (macro-error name "defnr takes a name as first argument"))
-  `(do (require hy.contrib.loop)
-       (setv ~name (hy.contrib.loop.fnr ~lambda-list ~@body))))
+  `(do (require hyhy.contrib.loop)
+       (setv ~name (hyhy.contrib.loop.fnr ~lambda-list ~@body))))
 
 
 (defmacro/g! loop [bindings &rest body]
@@ -65,6 +65,6 @@
   ;; and erroring if not is a giant TODO.
   (setv fnargs (map (fn [x] (first x)) bindings)
         initargs (map second bindings))
-  `(do (require hy.contrib.loop)
-       (hy.contrib.loop.defnr ~g!recur-fn [~@fnargs] ~@body)
+  `(do (require hyhy.contrib.loop)
+       (hyhy.contrib.loop.defnr ~g!recur-fn [~@fnargs] ~@body)
        (~g!recur-fn ~@initargs)))

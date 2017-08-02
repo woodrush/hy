@@ -40,11 +40,11 @@ Do this:
 
 2. Get the source code::
 
-       $ git clone https://github.com/hylang/hy.git
+       $ git clone https://github.com/hylang/hyhy.git
 
    or use your fork::
 
-       $ git clone git@github.com:<YOUR_USERNAME>/hy.git
+       $ git clone git@github.com:<YOUR_USERNAME>/hyhy.git
 
 3. Install for hacking::
 

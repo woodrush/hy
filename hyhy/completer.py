@@ -7,9 +7,9 @@ import os
 import re
 import sys
 
-import hy.macros
-import hy.compiler
-from hy._compat import builtins, string_types
+import hyhy.macros
+import hyhy.compiler
+from hyhy._compat import builtins, string_types
 
 
 docomplete = True
@@ -36,15 +36,15 @@ class Completer(object):
         if not isinstance(namespace, dict):
             raise TypeError('namespace must be a dictionary')
         self.namespace = namespace
-        self.path = [hy.compiler._compile_table,
+        self.path = [hyhy.compiler._compile_table,
                      builtins.__dict__,
-                     hy.macros._hy_macros[None],
+                     hyhy.macros._hy_macros[None],
                      namespace]
-        self.tag_path = [hy.macros._hy_tag[None]]
+        self.tag_path = [hyhy.macros._hy_tag[None]]
         if '__name__' in namespace:
             module_name = namespace['__name__']
-            self.path.append(hy.macros._hy_macros[module_name])
-            self.tag_path.append(hy.macros._hy_tag[module_name])
+            self.path.append(hyhy.macros._hy_macros[module_name])
+            self.tag_path.append(hyhy.macros._hy_tag[module_name])
 
     def attr_matches(self, text):
         # Borrowed from IPython's completer
@@ -114,7 +114,7 @@ def completion(completer=None):
         readline.set_completer(completer.complete)
         readline.set_completer_delims(delims)
 
-        history = os.path.expanduser("~/.hy-history")
+        history = os.path.expanduser("~/.hyhy-history")
         readline.parse_and_bind("set blink-matching-paren on")
 
         try:

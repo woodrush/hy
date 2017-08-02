@@ -3,18 +3,18 @@
 # license. See the LICENSE.
 
 from inspect import getargspec, formatargspec
-from hy.models import replace_hy_obj, HyExpression, HySymbol
+from hyhy.models import replace_hy_obj, HyExpression, HySymbol
 
-from hy.errors import HyTypeError, HyMacroExpansionError
+from hyhy.errors import HyTypeError, HyMacroExpansionError
 
 from collections import defaultdict
 
 CORE_MACROS = [
-    "hy.core.bootstrap",
+    "hyhy.core.bootstrap",
 ]
 
 EXTRA_MACROS = [
-    "hy.core.macros",
+    "hyhy.core.macros",
 ]
 
 _hy_macros = defaultdict(dict)
@@ -27,7 +27,7 @@ def macro(name):
     This stores the macro `name` in the namespace for the module where it is
     defined.
 
-    If the module where it is defined is in `hy.core`, then the macro is stored
+    If the module where it is defined is in `hyhy.core`, then the macro is stored
     in the default `None` namespace.
 
     This function is called from the `defmacro` special form in the compiler.
@@ -43,7 +43,7 @@ def macro(name):
             fn._hy_macro_pass_compiler = False
 
         module_name = fn.__module__
-        if module_name.startswith("hy.core"):
+        if module_name.startswith("hyhy.core"):
             module_name = None
         _hy_macros[module_name][name] = fn
         return fn
@@ -56,7 +56,7 @@ def tag(name):
     This stores the macro `name` in the namespace for the module where it is
     defined.
 
-    If the module where it is defined is in `hy.core`, then the macro is stored
+    If the module where it is defined is in `hyhy.core`, then the macro is stored
     in the default `None` namespace.
 
     This function is called from the `deftag` special form in the compiler.
@@ -64,7 +64,7 @@ def tag(name):
     """
     def _(fn):
         module_name = fn.__module__
-        if module_name.startswith("hy.core"):
+        if module_name.startswith("hyhy.core"):
             module_name = None
         _hy_tag[module_name][name] = fn
 
@@ -107,7 +107,7 @@ def require(source_module, target_module,
 def load_macros(module_name):
     """Load the hy builtin macros for module `module_name`.
 
-    Modules from `hy.core` can only use the macros from CORE_MACROS.
+    Modules from `hyhy.core` can only use the macros from CORE_MACROS.
     Other modules get the macros from CORE_MACROS and EXTRA_MACROS.
 
     """
@@ -120,7 +120,7 @@ def load_macros(module_name):
     for module in CORE_MACROS:
         _import(module)
 
-    if module_name.startswith("hy.core"):
+    if module_name.startswith("hyhy.core"):
         return
 
     for module in EXTRA_MACROS:

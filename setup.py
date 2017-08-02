@@ -12,9 +12,9 @@ from get_version import __version__
 
 os.chdir(os.path.split(os.path.abspath(__file__))[0])
 
-PKG = "hy"
+PKG = "hyhy"
 
-long_description = """Hy is a Python <--> Lisp layer. It helps
+long_description = """HyHy is a Python <--> Lisp layer. It helps
 make things work nicer, and lets Python and the Hy lisp variant play
 nice together. """
 
@@ -22,7 +22,7 @@ class Install(install):
     def run(self):
         # Import each Hy module to ensure it's compiled.
         import os, importlib
-        for dirpath, _, filenames in sorted(os.walk("hy")):
+        for dirpath, _, filenames in sorted(os.walk("hyhy")):
             for filename in sorted(filenames):
                 if filename.endswith(".hy"):
                     importlib.import_module(
@@ -43,19 +43,19 @@ setup(
     cmdclass=dict(install=Install),
     entry_points={
         'console_scripts': [
-            'hy = hy.cmdline:hy_main',
-            'hy%d = hy.cmdline:hy_main' % ver,
-            'hyc = hy.cmdline:hyc_main',
-            'hyc%d = hy.cmdline:hyc_main' % ver,
-            'hy2py = hy.cmdline:hy2py_main',
-            'hy2py%d = hy.cmdline:hy2py_main' % ver,
+            'hyhy = hyhy.cmdline:hy_main',
+            'hyhy%d = hyhy.cmdline:hy_main' % ver,
+            'hyhyc = hyhy.cmdline:hyc_main',
+            'hyhyc%d = hyhy.cmdline:hyc_main' % ver,
+            'hyhy2py = hyhy.cmdline:hy2py_main',
+            'hyhy2py%d = hyhy.cmdline:hy2py_main' % ver,
         ]
     },
     packages=find_packages(exclude=['tests*']),
     package_data={
-        'hy.contrib': ['*.hy', '__pycache__/*'],
-        'hy.core': ['*.hy', '__pycache__/*'],
-        'hy.extra': ['*.hy', '__pycache__/*'],
+        'hyhy.contrib': ['*.hy', '__pycache__/*'],
+        'hyhy.core': ['*.hy', '__pycache__/*'],
+        'hyhy.extra': ['*.hy', '__pycache__/*'],
     },
     data_files=[
         ('get_version', ['get_version.py'])
