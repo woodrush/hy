@@ -7,7 +7,6 @@ from rply import LexerGenerator
 
 lg = LexerGenerator()
 
-
 # A regexp for something that should end a quoting/unquoting operator
 # i.e. a space or a closing brace/paren/curly
 end_quote = r'(?![\s\)\]\}])'
