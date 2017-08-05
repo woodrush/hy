@@ -4,7 +4,7 @@
 FROM        python:3
 MAINTAINER  Paul R. Tagliamonte <paultag@hylang.org>
 
-ADD . /opt/hylang/hy
-RUN pip3 install -e /opt/hylang/hy
+ADD . /opt/hylang/hyhy
+RUN pip3 install -e /opt/hylang/hyhy
 
-CMD ["hy"]
+CMD ["hyhy"]

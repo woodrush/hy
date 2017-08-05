@@ -56,6 +56,7 @@ setup(
         'hyhy.contrib': ['*.hyhy', '__pycache__/*'],
         'hyhy.core': ['*.hyhy', '__pycache__/*'],
         'hyhy.extra': ['*.hyhy', '__pycache__/*'],
+        'hyhy': ['*.hy'],
     },
     data_files=[
         ('get_version', ['get_version.py'])

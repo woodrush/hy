@@ -2,8 +2,6 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
-from __future__ import print_function
-
 import argparse
 import code
 import ast
@@ -13,8 +11,8 @@ import importlib
 
 import astor.codegen
 
-import hyhy
 import hy
+import hyhy
 
 from hyhy.lex import LexException, PrematureEndOfInput
 from hyhy.lex.parser import hy_symbol_mangle
@@ -171,8 +169,8 @@ def ideas_macro():
 
 """)])
 
-require("hyhy.cmdline", "__console__", all_macros=True)
-require("hyhy.cmdline", "__main__", all_macros=True)
+hyhy.macros.require("hyhy.cmdline", "__console__", all_macros=True)
+hyhy.macros.require("hyhy.cmdline", "__main__", all_macros=True)
 
 SIMPLE_TRACEBACKS = True
 
