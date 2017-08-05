@@ -18,6 +18,7 @@ import ast
 import inspect
 import os
 import __future__
+import builtins
 
 from hyhy._compat import PY3, PY34, MAGIC, builtins, long_type, wr_long
 from hyhy._compat import string_types
@@ -109,7 +110,7 @@ def import_file_to_module(module_name, fpath, loader=None):
                     # permissions issue. The user only asked to import the
                     # file, so don't bug them about it.
                     pass
-            eval(code, module.__dict__)
+            builtins.eval(code, module.__dict__)
         except (HyTypeError, LexException) as e:
             if e.source is None:
                 with open(fpath, 'rt') as fp:
@@ -138,7 +139,7 @@ def import_buffer_to_module(module_name, buf):
     try:
         _ast = import_buffer_to_ast(buf, module_name)
         mod = imp.new_module(module_name)
-        eval(ast_compile(_ast, "", "exec"), mod.__dict__)
+        builtins.eval(ast_compile(_ast, "", "exec"), mod.__dict__)
     except (HyTypeError, LexException) as e:
         if e.source is None:
             e.source = buf
@@ -196,10 +197,10 @@ def hy_eval(hytree, namespace=None, module_name=None, ast_callback=None):
         raise HyTypeError(foo, "Globals must be a dictionary")
 
     # Two-step eval: eval() the body of the exec call
-    eval(ast_compile(_ast, "<eval_body>", "exec"), namespace)
+    builtins.eval(ast_compile(_ast, "<eval_body>", "exec"), namespace)
 
     # Then eval the expression context and return that
-    return eval(ast_compile(expr, "<eval>", "eval"), namespace)
+    return builtins.eval(ast_compile(expr, "<eval>", "eval"), namespace)
 
 
 def write_hy_as_pyc(fname):
