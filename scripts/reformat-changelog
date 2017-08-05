@@ -1,4 +1,4 @@
-#!/usr/bin/env hy
+#!/usr/bin/env hyhy
 
 (import re)
 (import pdb)
@@ -51,7 +51,7 @@
     []))
 
 (defn format-deb-version [version]
-  (setv result [(.format "hy ({}) unstable; urgency=low"
+  (setv result [(.format "hyhy ({}) unstable; urgency=low"
                         (get version "from"))])
   (for [line (get version "content")]
        (.append result (+ "  " line)))

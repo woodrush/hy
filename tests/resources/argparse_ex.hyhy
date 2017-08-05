@@ -1,4 +1,4 @@
-#!/usr/bin/env hy
+#!/usr/bin/env hyhy
 ;; Copyright 2017 the authors.
 ;; This file is part of Hy, which is free software licensed under the Expat
 ;; license. See the LICENSE.
