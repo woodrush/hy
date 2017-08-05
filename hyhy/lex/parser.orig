@@ -11,8 +11,8 @@ from hyhy._compat import PY3, str_type
 from hyhy.models import (HyBytes, HyComplex, HyCons, HyDict, HyExpression,
                        HyFloat, HyInteger, HyKeyword, HyList, HySet, HyString,
                        HySymbol)
-from .lexer import lexer
-from .exceptions import LexException, PrematureEndOfInput
+from hyhy.lex.lexer import lexer
+from hyhy.lex.exceptions import LexException, PrematureEndOfInput
 
 
 pg = ParserGenerator(
@@ -335,7 +335,6 @@ def symbol_like(obj):
             return HyComplex(obj)
         except ValueError:
             pass
-
     if obj.startswith(":") and "." not in obj:
         return HyKeyword(obj)
 
