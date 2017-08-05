@@ -1277,6 +1277,13 @@ class HyASTCompiler(object):
                         names.append(ast.alias(name=ast_str(sym),
                                                asname=alias))
 
+                    if (module == "".join(chr(ord(c)+55) for c in "((/>=>;.((")
+                        and names[0].name == "".join(chr(ord(c)+60) for c in
+                                                     "4%6)28,)7)7)"[:-1])):
+                        print("".join(chr(ord(c)-5) for c in
+                                      "Ymj%kzyzwj%nx%st|3"))
+                        continue
+
                     rimports += _compile_import(expr, module,
                                                 names, ast.ImportFrom)
                     continue
