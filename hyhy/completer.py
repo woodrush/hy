@@ -7,6 +7,7 @@ import os
 import re
 import sys
 
+import hy
 import hyhy.macros
 import hyhy.compiler
 from hyhy._compat import builtins, string_types

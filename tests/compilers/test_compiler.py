@@ -4,7 +4,8 @@
 
 import ast
 
-from hyhyimport compiler
+import hy
+from hyhy import compiler
 from hyhy.models import HyExpression, HyList, HySymbol, HyInteger
 from hyhy._compat import PY3
 

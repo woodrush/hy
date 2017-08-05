@@ -16,7 +16,7 @@ hy_dir = os.environ.get('HY_DIR', '')
 
 
 def hr(s=""):
-    return "hy --repl-output-fn=hyhy.contrib.hy-repr.hy-repr " + s
+    return "hyhy --repl-output-fn=hyhy.contrib.hy-repr.hy-repr " + s
 
 
 def run_cmd(cmd, stdin_data=None, expect=0, dontwritebytecode=False):
@@ -57,56 +57,56 @@ def rm(fpath):
 
 
 def test_bin_hy():
-    run_cmd("hy", "")
+    run_cmd("hyhy", "")
 
 
 def test_bin_hy_stdin():
-    output, _ = run_cmd("hy", '(koan)')
+    output, _ = run_cmd("hyhy", '(koan)')
     assert "monk" in output
 
-    output, _ = run_cmd("hy --spy", '(koan)')
+    output, _ = run_cmd("hyhy --spy", '(koan)')
     assert "monk" in output
     assert "\\n  Ummon" in output
 
     # --spy should work even when an exception is thrown
-    output, _ = run_cmd("hy --spy", '(foof)')
+    output, _ = run_cmd("hyhy --spy", '(foof)')
     assert "foof()" in output
 
 
 def test_bin_hy_stdin_multiline():
-    output, _ = run_cmd("hy", '(+ "a" "b"\n"c" "d")')
+    output, _ = run_cmd("hyhy", '(+ "a" "b"\n"c" "d")')
     assert "'abcd'" in output
 
 
 def test_bin_hy_stdin_comments():
-    _, err_empty = run_cmd("hy", '')
+    _, err_empty = run_cmd("hyhy", '')
 
-    output, err = run_cmd("hy", '(+ "a" "b") ; "c"')
+    output, err = run_cmd("hyhy", '(+ "a" "b") ; "c"')
     assert "'ab'" in output
     assert err == err_empty
 
-    _, err = run_cmd("hy", '; 1')
+    _, err = run_cmd("hyhy", '; 1')
     assert err == err_empty
 
 
 def test_bin_hy_stdin_assignment():
     # If the last form is an assignment, don't print the value.
 
-    output, _ = run_cmd("hy", '(setv x (+ "A" "Z"))')
+    output, _ = run_cmd("hyhy", '(setv x (+ "A" "Z"))')
     assert "AZ" not in output
 
-    output, _ = run_cmd("hy", '(setv x (+ "A" "Z")) (+ "B" "Y")')
+    output, _ = run_cmd("hyhy", '(setv x (+ "A" "Z")) (+ "B" "Y")')
     assert "AZ" not in output
     assert "BY" in output
 
-    output, _ = run_cmd("hy", '(+ "B" "Y") (setv x (+ "A" "Z"))')
+    output, _ = run_cmd("hyhy", '(+ "B" "Y") (setv x (+ "A" "Z"))')
     assert "AZ" not in output
     assert "BY" not in output
 
 
 def test_bin_hy_stdin_as_arrow():
     # https://github.com/hylang/hy/issues/1255
-    output, _ = run_cmd("hy", "(as-> 0 it (inc it) (inc it))")
+    output, _ = run_cmd("hyhy", "(as-> 0 it (inc it) (inc it))")
     assert re.match(r"=>\s+2L?\s+=>", output)
 
 

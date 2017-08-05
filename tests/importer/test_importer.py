@@ -13,7 +13,7 @@ import tempfile
 def test_basics():
     "Make sure the basics of the importer work"
     import_file_to_module("basic",
-                          "tests/resources/importer/basic.hy")
+                          "tests/resources/importer/basic.hyhy")
 
 
 def test_stringer():
@@ -22,7 +22,7 @@ def test_stringer():
 
 
 def test_imports():
-    path = os.getcwd() + "/tests/resources/importer/a.hy"
+    path = os.getcwd() + "/tests/resources/importer/a.hyhy"
     testLoader = MetaLoader(path)
 
     def _import_test():

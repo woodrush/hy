@@ -14,6 +14,7 @@ import importlib
 import astor.codegen
 
 import hyhy
+import hy
 
 from hyhy.lex import LexException, PrematureEndOfInput
 from hyhy.lex.parser import hy_symbol_mangle
@@ -257,7 +258,7 @@ EPILOG = """  file         program read from script
 
 def cmdline_handler(scriptname, argv):
     parser = argparse.ArgumentParser(
-        prog="hy",
+        prog="hyhy",
         usage=USAGE,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=EPILOG)
@@ -328,7 +329,7 @@ def cmdline_handler(scriptname, argv):
             try:
                 return run_file(options.args[0])
             except HyIOError as e:
-                print("hy: Can't open file '{0}': [Errno {1}] {2}\n".format(
+                print("hyhy: Can't open file '{0}': [Errno {1}] {2}\n".format(
                     e.filename, e.errno, e.strerror), file=sys.stderr)
                 sys.exit(e.errno)
 
@@ -338,7 +339,7 @@ def cmdline_handler(scriptname, argv):
 
 # entry point for cmd line script "hy"
 def hy_main():
-    sys.exit(cmdline_handler("hy", sys.argv))
+    sys.exit(cmdline_handler("hyhy", sys.argv))
 
 
 # entry point for cmd line script "hyc"

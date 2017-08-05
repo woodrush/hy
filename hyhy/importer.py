@@ -2,6 +2,7 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
+import hy
 from hyhy.compiler import hy_compile, HyTypeError
 from hyhy.models import HyObject, HyExpression, HySymbol, replace_hy_obj
 from hyhy.lex import tokenize, LexException
@@ -242,7 +243,7 @@ class MetaLoader(object):
 
 class MetaImporter(object):
     def find_on_path(self, fullname):
-        fls = ["%s/__init__.hy", "%s.hy"]
+        fls = ["%s/__init__.hyhy", "%s.hyhy"]
         dirpath = "/".join(fullname.split("."))
 
         for pth in sys.path:
@@ -265,7 +266,7 @@ sys.path.insert(0, "")
 def is_package(module_name):
     mpath = os.path.join(*module_name.split("."))
     for path in map(os.path.abspath, sys.path):
-        if os.path.exists(os.path.join(path, mpath, "__init__.hy")):
+        if os.path.exists(os.path.join(path, mpath, "__init__.hyhy")):
             return True
     return False
 

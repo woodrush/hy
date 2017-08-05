@@ -4,7 +4,8 @@
 
 from __future__ import unicode_literals
 
-from hyhyimport HyString
+import hy
+from hyhy import HyString
 from hyhy.models import HyObject
 from hyhy.compiler import hy_compile
 from hyhy.importer import import_buffer_to_hst
@@ -571,9 +572,9 @@ def test_bad_setv():
 def test_defn():
     """Ensure that defn works correctly in various corner cases"""
     cant_compile("(defn if* [] 1)")
-    cant_compile("(defn \"hy\" [] 1)")
-    cant_compile("(defn :hy [] 1)")
-    can_compile("(defn &hy [] 1)")
+    cant_compile("(defn \"hyhy\" [] 1)")
+    cant_compile("(defn :hyhy [] 1)")
+    can_compile("(defn &hyhy [] 1)")
 
 
 def test_setv_builtins():

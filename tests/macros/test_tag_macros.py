@@ -2,6 +2,7 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
+import hy
 from hyhy.macros import macroexpand
 from hyhy.compiler import HyTypeError, HyASTCompiler
 from hyhy.lex import tokenize

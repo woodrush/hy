@@ -24,10 +24,10 @@ class Install(install):
         import os, importlib
         for dirpath, _, filenames in sorted(os.walk("hyhy")):
             for filename in sorted(filenames):
-                if filename.endswith(".hy"):
+                if filename.endswith(".hyhy"):
                     importlib.import_module(
                         dirpath.replace("/", ".").replace("\\", ".") +
-                        "." + filename[:-len(".hy")])
+                        "." + filename[:-len(".hyhy")])
         install.run(self)
 
 install_requires = ['rply>=0.7.5', 'astor>=0.5', 'clint>=0.4']
@@ -53,9 +53,9 @@ setup(
     },
     packages=find_packages(exclude=['tests*']),
     package_data={
-        'hyhy.contrib': ['*.hy', '__pycache__/*'],
-        'hyhy.core': ['*.hy', '__pycache__/*'],
-        'hyhy.extra': ['*.hy', '__pycache__/*'],
+        'hyhy.contrib': ['*.hyhy', '__pycache__/*'],
+        'hyhy.core': ['*.hyhy', '__pycache__/*'],
+        'hyhy.extra': ['*.hyhy', '__pycache__/*'],
     },
     data_files=[
         ('get_version', ['get_version.py'])

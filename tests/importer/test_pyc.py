@@ -10,7 +10,7 @@ from hyhy.importer import write_hy_as_pyc, get_bytecode_path
 
 def test_pyc():
     """Test pyc compilation."""
-    f = tempfile.NamedTemporaryFile(suffix='.hy', delete=False)
+    f = tempfile.NamedTemporaryFile(suffix='.hyhy', delete=False)
     f.write(b'(defn pyctest [s] (+ "X" s "Y"))')
     f.close()
 
