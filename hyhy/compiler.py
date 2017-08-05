@@ -3,6 +3,7 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
+import hy
 from hyhy.models import (HyObject, HyExpression, HyKeyword, HyInteger, HyComplex,
                        HyString, HyBytes, HySymbol, HyFloat, HyList, HySet,
                        HyDict, HyCons, wrap_value)

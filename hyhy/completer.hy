@@ -3,6 +3,7 @@
 (import [os])
 (import [re])
 (import [sys])
+(import [hy])
 (import [hyhy.macros])
 (import [hyhy.compiler])
 (import [hyhy._compat [builtins string_types]])

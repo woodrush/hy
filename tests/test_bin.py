@@ -7,6 +7,7 @@
 import os
 import subprocess
 import re
+import hy
 from hyhy._compat import PY3, PY35
 from hyhy.importer import get_bytecode_path
 import pytest

@@ -15,6 +15,7 @@
 (if-python2
   (import [StringIO [StringIO]])
   (import [io [StringIO]]))
+(import hy)
 (import [hyhy._compat [long-type]]) ; long for python2, int for python3
 (import [hyhy.models [HyCons HySymbol HyKeyword]])
 (import [hyhy.lex [LexException PrematureEndOfInput tokenize]])

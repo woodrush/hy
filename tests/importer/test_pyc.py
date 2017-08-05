@@ -5,6 +5,7 @@
 import os
 import imp
 import tempfile
+import hy
 from hyhy.importer import write_hy_as_pyc, get_bytecode_path
 
 
