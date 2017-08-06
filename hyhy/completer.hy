@@ -6,6 +6,7 @@
 (import [hyhy.macros])
 (import [hyhy.compiler])
 (import [hyhy._compat [builtins string_types]])
+(import [builtins])
 (do (setv docomplete True))
 (try (do (import [readline])) (except [e Py2HyReturnException] (raise e)) (except [ImportError] (try (do (import [pyreadline.rlmain]) 
  (import [pyreadline.unicode_helper]) 
@@ -23,7 +24,7 @@
  "Using a hacky implementation of `return`" 
  (try (do (do (setv m (re.match "(\\S+(\\.[\\w-]+)*)\\.([\\w-]*)$" text))) 
  (if m (do (do (do (setv expr (nth (m.group 1 3) 0)) (setv attr (nth (m.group 1 3) 1)))) (do (setv attr (attr.replace "-" "_"))) (do (setv expr (expr.replace "-" "_")))) (do (raise (Py2HyReturnException [])))) 
- (try (do (do (setv obj (eval expr self.namespace))) 
+ (try (do (do (setv obj (builtins.eval expr self.namespace))) 
  (do (setv words (dir obj)))) (except [e Py2HyReturnException] (raise e)) (except [Exception] (raise (Py2HyReturnException [])))) 
  (do (setv n (len attr))) 
  (do (setv matches [])) 

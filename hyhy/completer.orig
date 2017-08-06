@@ -11,7 +11,7 @@ import sys
 import hyhy.macros
 import hyhy.compiler
 from hyhy._compat import builtins, string_types
-
+import builtins
 
 docomplete = True
 
@@ -59,7 +59,7 @@ class Completer(object):
             return []
 
         try:
-            obj = eval(expr, self.namespace)
+            obj = builtins.eval(expr, self.namespace)
             words = dir(obj)
         except Exception:
             return []

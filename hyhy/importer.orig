@@ -3,6 +3,7 @@
 # license. See the LICENSE.
 
 import hy
+import hyhy
 from hyhy.compiler import hy_compile, HyTypeError
 from hyhy.models import HyObject, HyExpression, HySymbol, replace_hy_obj
 from hyhy.lex import tokenize, LexException
@@ -51,12 +52,12 @@ def import_file_to_hst(fpath):
 
 def import_buffer_to_ast(buf, module_name):
     """ Import content from buf and return a Python AST."""
-    return hy_compile(import_buffer_to_hst(buf), module_name)
+    return hyhy.compiler.hy_compile(import_buffer_to_hst(buf), module_name)
 
 
 def import_file_to_ast(fpath, module_name):
     """Import content from fpath and return a Python AST."""
-    return hy_compile(import_file_to_hst(fpath), module_name)
+    return hyhy.compiler.hy_compile(import_file_to_hst(fpath), module_name)
 
 
 def import_file_to_module(module_name, fpath, loader=None):
@@ -179,7 +180,7 @@ def hy_eval(hytree, namespace=None, module_name=None, ast_callback=None):
     if not isinstance(module_name, string_types):
         raise HyTypeError(foo, "Module name must be a string")
 
-    _ast, expr = hy_compile(hytree, module_name, get_expr=True)
+    _ast, expr = hyhy.compiler.hy_compile(hytree, module_name, get_expr=True)
 
     # Spoof the positions in the generated ast...
     for node in ast.walk(_ast):

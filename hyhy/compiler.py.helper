@@ -34,6 +34,12 @@ else:
     import __builtin__ as builtins
 
 
+
+from hyhy.compiler_helper import Result, hy_compile, HyASTCompilerHelper
+
+
+
+
 _compile_time_ns = {}
 
 
@@ -126,175 +132,6 @@ def spoof_positions(obj):
             spoof_positions(x)
 
 
-class Result(object):
-    """
-    Smart representation of the result of a hy->AST compilation
-
-    This object tries to reconcile the hy world, where everything can be used
-    as an expression, with the Python world, where statements and expressions
-    need to coexist.
-
-    To do so, we represent a compiler result as a list of statements `stmts`,
-    terminated by an expression context `expr`. The expression context is used
-    when the compiler needs to use the result as an expression.
-
-    Results are chained by addition: adding two results together returns a
-    Result representing the succession of the two Results' statements, with
-    the second Result's expression context.
-
-    We make sure that a non-empty expression context does not get clobbered by
-    adding more results, by checking accesses to the expression context. We
-    assume that the context has been used, or deliberately ignored, if it has
-    been accessed.
-
-    The Result object is interoperable with python AST objects: when an AST
-    object gets added to a Result object, it gets converted on-the-fly.
-    """
-    __slots__ = ("imports", "stmts", "temp_variables",
-                 "_expr", "__used_expr", "contains_yield")
-
-    def __init__(self, *args, **kwargs):
-        if args:
-            # emulate kw-only args for future bits.
-            raise TypeError("Yo: Hacker: don't pass me real args, dingus")
-
-        self.imports = defaultdict(set)
-        self.stmts = []
-        self.temp_variables = []
-        self._expr = None
-        self.contains_yield = False
-
-        self.__used_expr = False
-
-        # XXX: Make sure we only have AST where we should.
-        for kwarg in kwargs:
-            if kwarg not in ["imports", "contains_yield", "stmts", "expr",
-                             "temp_variables"]:
-                raise TypeError(
-                    "%s() got an unexpected keyword argument '%s'" % (
-                        self.__class__.__name__, kwarg))
-            setattr(self, kwarg, kwargs[kwarg])
-
-    @property
-    def expr(self):
-        self.__used_expr = True
-        return self._expr
-
-    @expr.setter
-    def expr(self, value):
-        self.__used_expr = False
-        self._expr = value
-
-    def add_imports(self, mod, imports):
-        """Autoimport `imports` from `mod`"""
-        self.imports[mod].update(imports)
-
-    def is_expr(self):
-        """Check whether I am a pure expression"""
-        return self._expr and not (self.imports or self.stmts)
-
-    @property
-    def force_expr(self):
-        """Force the expression context of the Result.
-
-        If there is no expression context, we return a "None" expression.
-        """
-        if self.expr:
-            return self.expr
-
-        # Spoof the position of the last statement for our generated None
-        lineno = 0
-        col_offset = 0
-        if self.stmts:
-            lineno = self.stmts[-1].lineno
-            col_offset = self.stmts[-1].col_offset
-
-        return ast.Name(id=ast_str("None"),
-                        arg=ast_str("None"),
-                        ctx=ast.Load(),
-                        lineno=lineno,
-                        col_offset=col_offset)
-
-    def expr_as_stmt(self):
-        """Convert the Result's expression context to a statement
-
-        This is useful when we want to use the stored expression in a
-        statement context (for instance in a code branch).
-
-        We drop ast.Names if they are appended to statements, as they
-        can't have any side effect. "Bare" names still get converted to
-        statements.
-
-        If there is no expression context, return an empty result.
-        """
-        if self.expr and not (isinstance(self.expr, ast.Name) and self.stmts):
-            return Result() + ast.Expr(lineno=self.expr.lineno,
-                                       col_offset=self.expr.col_offset,
-                                       value=self.expr)
-        return Result()
-
-    def rename(self, new_name):
-        """Rename the Result's temporary variables to a `new_name`.
-
-        We know how to handle ast.Names and ast.FunctionDefs.
-        """
-        new_name = ast_str(new_name)
-        for var in self.temp_variables:
-            if isinstance(var, ast.Name):
-                var.id = new_name
-                var.arg = new_name
-            elif isinstance(var, ast.FunctionDef):
-                var.name = new_name
-            else:
-                raise TypeError("Don't know how to rename a %s!" % (
-                    var.__class__.__name__))
-        self.temp_variables = []
-
-    def __add__(self, other):
-        # If we add an ast statement, convert it first
-        if isinstance(other, ast.stmt):
-            return self + Result(stmts=[other])
-
-        # If we add an ast expression, clobber the expression context
-        if isinstance(other, ast.expr):
-            return self + Result(expr=other)
-
-        if isinstance(other, ast.excepthandler):
-            return self + Result(stmts=[other])
-
-        if not isinstance(other, Result):
-            raise TypeError("Can't add %r with non-compiler result %r" % (
-                self, other))
-
-        # Check for expression context clobbering
-        if self.expr and not self.__used_expr:
-            traceback.print_stack()
-            print("Bad boy clobbered expr %s with %s" % (
-                ast.dump(self.expr),
-                ast.dump(other.expr)))
-
-        # Fairly obvious addition
-        result = Result()
-        result.imports = other.imports
-        result.stmts = self.stmts + other.stmts
-        result.expr = other.expr
-        result.temp_variables = other.temp_variables
-        result.contains_yield = False
-        if self.contains_yield or other.contains_yield:
-            result.contains_yield = True
-
-        return result
-
-    def __str__(self):
-        return (
-            "Result(imports=[%s], stmts=[%s], "
-            "expr=%s, contains_yield=%s)"
-        ) % (
-            ", ".join(ast.dump(x) for x in self.imports),
-            ", ".join(ast.dump(x) for x in self.stmts),
-            ast.dump(self.expr) if self.expr else None,
-            self.contains_yield
-        )
 
 
 def _branch(results):
@@ -368,7 +205,7 @@ def is_unpack(kind, x):
             and x[0] == "unpack_" + kind)
 
 
-class HyASTCompiler(object):
+class HyASTCompiler(HyASTCompilerHelper):
 
     def __init__(self, module_name):
         self.allow_builtins = module_name.startswith("hyhy.core")
@@ -380,19 +217,6 @@ class HyASTCompiler(object):
         if not module_name.startswith("hyhy.core"):
             # everything in core needs to be explicit.
             load_stdlib()
-
-    def get_anon_var(self):
-        self.anon_var_count += 1
-        return "_hy_anon_var_%s" % self.anon_var_count
-
-    def get_anon_fn(self):
-        self.anon_fn_count += 1
-        return "_hy_anon_fn_%d" % self.anon_fn_count
-
-    def update_imports(self, result):
-        """Retrieve the imports from the result object"""
-        for mod in result.imports:
-            self.imports[mod].update(result.imports[mod])
 
     def imports_as_stmts(self, expr):
         """Convert the Result's imports to statements"""

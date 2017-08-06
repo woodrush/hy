@@ -1,4 +1,5 @@
 import _pytest
+import hy
 import hyhy
 from hyhy._compat import PY3, PY35
 

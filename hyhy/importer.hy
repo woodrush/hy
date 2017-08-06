@@ -1,5 +1,6 @@
 (import [hy])
 (defclass Py2HyReturnException [Exception] (defn __init__ [self retvalue] (setv self.retvalue retvalue)))
+(import [hyhy])
 (import [hyhy.compiler [hy_compile HyTypeError]])
 (import [hyhy.models [HyObject HyExpression HySymbol replace_hy_obj]])
 (import [hyhy.lex [tokenize LexException]])
@@ -37,11 +38,11 @@
 (defn import_buffer_to_ast [buf module_name] 
  " Import content from buf and return a Python AST." 
  "Using a hacky implementation of `return`" 
- (try (do (raise (Py2HyReturnException (hy_compile (import_buffer_to_hst buf) module_name)))) (except [e Py2HyReturnException] e.retvalue)))
+ (try (do (raise (Py2HyReturnException (hyhy.compiler.hy_compile (import_buffer_to_hst buf) module_name)))) (except [e Py2HyReturnException] e.retvalue)))
 (defn import_file_to_ast [fpath module_name] 
  "Import content from fpath and return a Python AST." 
  "Using a hacky implementation of `return`" 
- (try (do (raise (Py2HyReturnException (hy_compile (import_file_to_hst fpath) module_name)))) (except [e Py2HyReturnException] e.retvalue)))
+ (try (do (raise (Py2HyReturnException (hyhy.compiler.hy_compile (import_file_to_hst fpath) module_name)))) (except [e Py2HyReturnException] e.retvalue)))
 (defn import_file_to_module [module_name fpath &optional [loader None]] 
  "Import Hy source from fpath and put it into a Python module.
 
@@ -103,7 +104,7 @@
  (do (setv foo.end_column 0)) 
  (replace_hy_obj hytree foo) 
  (when (not (isinstance module_name string_types)) (do (raise (HyTypeError foo "Module name must be a string")))) 
- (do (do (setv _ast (nth (hy_compile hytree module_name :get_expr True) 0)) (setv expr (nth (hy_compile hytree module_name :get_expr True) 1)))) 
+ (do (do (setv _ast (nth (hyhy.compiler.hy_compile hytree module_name :get_expr True) 0)) (setv expr (nth (hyhy.compiler.hy_compile hytree module_name :get_expr True) 1)))) 
  (for [node (ast.walk _ast)] 
  (do (setv node.lineno 1)) 
  (do (setv node.col_offset 1))) 
