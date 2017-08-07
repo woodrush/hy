@@ -15,7 +15,7 @@
 (import [hyhy.completer [completion]])
 (import [hyhy.completer [Completer]])
 (import [hyhy.errors [HyIOError]])
-(import [hyhy.macros [macro require]])
+(import [hyhy.macros [macro require_hyhy]])
 (import [hyhy.models [HyExpression HyString HySymbol]])
 (import [hyhy._compat [builtins PY3]])
 (defclass HyQuitter [object] (defn __init__ [self name] 
@@ -97,8 +97,8 @@
 (max (map (fn [x] (len x)) [\"hi\" \"my\" \"name\" \"is\" \"paul\"]))
 
 ")])))) (except [e Py2HyReturnException] e.retvalue))))
-(hyhy.macros.require "hyhy.cmdline" "__console__" :all_macros True)
-(hyhy.macros.require "hyhy.cmdline" "__main__" :all_macros True)
+(hyhy.macros.require_hyhy "hyhy.cmdline" "__console__" :all_macros True)
+(hyhy.macros.require_hyhy "hyhy.cmdline" "__main__" :all_macros True)
 (do (setv SIMPLE_TRACEBACKS True))
 (defn pretty_error [func &kwargs kw &rest args] 
  "Using a hacky implementation of `return`" 

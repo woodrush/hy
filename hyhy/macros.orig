@@ -8,6 +8,7 @@ from hyhy.models import replace_hy_obj, HyExpression, HySymbol
 from hyhy.errors import HyTypeError, HyMacroExpansionError
 
 from collections import defaultdict
+import builtins
 
 CORE_MACROS = [
     "hyhy.core.bootstrap",
@@ -72,7 +73,7 @@ def tag(name):
     return _
 
 
-def require(source_module, target_module,
+def require_hyhy(source_module, target_module,
             all_macros=False, assignments={}, prefix=""):
     """Load macros from `source_module` in the namespace of
     `target_module`. `assignments` maps old names to new names, but is
@@ -139,7 +140,7 @@ def make_empty_fn_copy(fn):
 
         fn_str = 'lambda {}: None'.format(
             formatted_args.lstrip('(').rstrip(')'))
-        empty_fn = eval(fn_str)
+        empty_fn = builtins.eval(fn_str)
 
     except Exception:
 

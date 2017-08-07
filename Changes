@@ -10,7 +10,7 @@ from hyhy.lex.exceptions
 ```
 
 require, macroexpand, macroexpand-1
--> hyhy.macros.require, hyhy.macros.macroexpand, hyhy.macros.macroexpand-1
+-> hyhy.macros.require_hyhy, hyhy.macros.macroexpand, hyhy.macros.macroexpand-1
 
 eval
 -> import builtins; builtins.eval

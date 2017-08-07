@@ -1617,7 +1617,7 @@ class HyASTCompiler(object):
             if isinstance(entry, HySymbol):
                 # e.g., (require foo)
                 __import__(entry)
-                hyhy.macros.require(entry, self.module_name, all_macros=True,
+                hyhy.macros.require_hyhy(entry, self.module_name, all_macros=True,
                         prefix=entry)
             elif isinstance(entry, HyList) and len(entry) == 2:
                 # e.g., (require [foo [bar baz :as MyBaz bing]])
@@ -1631,7 +1631,7 @@ class HyASTCompiler(object):
                     if len(names) != 1:
                         raise HyTypeError(names, "* in a (require) name list "
                                                  "must be on its own")
-                    hyhy.macros.require(module, self.module_name, all_macros=True)
+                    hyhy.macros.require_hyhy(module, self.module_name, all_macros=True)
                 else:
                     assignments = {}
                     while names:
@@ -1642,13 +1642,13 @@ class HyASTCompiler(object):
                         else:
                             symbol = names.pop(0)
                             assignments[symbol] = symbol
-                    hyhy.macros.require(module, self.module_name, assignments=assignments)
+                    hyhy.macros.require_hyhy(module, self.module_name, assignments=assignments)
             elif (isinstance(entry, HyList) and len(entry) == 3
                     and entry[1] == HyKeyword(":as")):
                 # e.g., (require [foo :as bar])
                 module, _, prefix = entry
                 __import__(module)
-                hyhy.macros.require(module, self.module_name, all_macros=True,
+                hyhy.macros.require_hyhy(module, self.module_name, all_macros=True,
                         prefix=prefix)
             else:
                 raise HyTypeError(entry, "unrecognized (require) syntax")

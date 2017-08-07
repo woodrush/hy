@@ -25,7 +25,7 @@ from hyhy.completer import Completer
 
 from hyhy.errors import HyIOError
 
-from hyhy.macros import macro, require
+from hyhy.macros import macro, require_hyhy
 from hyhy.models import HyExpression, HyString, HySymbol
 
 from hyhy._compat import builtins, PY3
@@ -169,8 +169,8 @@ def ideas_macro():
 
 """)])
 
-hyhy.macros.require("hyhy.cmdline", "__console__", all_macros=True)
-hyhy.macros.require("hyhy.cmdline", "__main__", all_macros=True)
+hyhy.macros.require_hyhy("hyhy.cmdline", "__console__", all_macros=True)
+hyhy.macros.require_hyhy("hyhy.cmdline", "__main__", all_macros=True)
 
 SIMPLE_TRACEBACKS = True
 
