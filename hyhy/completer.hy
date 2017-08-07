@@ -23,7 +23,7 @@
  (defn attr_matches [self text] 
  "Using a hacky implementation of `return`" 
  (try (do (do (setv m (re.match "(\\S+(\\.[\\w-]+)*)\\.([\\w-]*)$" text))) 
- (if m (do (do (do (setv expr (nth (m.group 1 3) 0)) (setv attr (nth (m.group 1 3) 1)))) (do (setv attr (attr.replace "-" "_"))) (do (setv expr (expr.replace "-" "_")))) (do (raise (Py2HyReturnException [])))) 
+ (if m (do (do (setv _py2hy_anon_var_G_1235 (m.group 1 3)) (do (setv expr (nth _py2hy_anon_var_G_1235 0)) (setv attr (nth _py2hy_anon_var_G_1235 1)))) (do (setv attr (attr.replace "-" "_"))) (do (setv expr (expr.replace "-" "_")))) (do (raise (Py2HyReturnException [])))) 
  (try (do (do (setv obj (builtins.eval expr self.namespace))) 
  (do (setv words (dir obj)))) (except [e Py2HyReturnException] (raise e)) (except [Exception] (raise (Py2HyReturnException [])))) 
  (do (setv n (len attr))) 

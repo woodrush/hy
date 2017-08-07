@@ -32,7 +32,7 @@
 (do (setv builtins.exit (HyQuitter "exit")))
 (defclass HyREPL [code.InteractiveConsole] (defn __init__ [self &optional [spy False] [output_fn None] [locals None] [filename "<input>"]] 
  (do (setv self.spy spy)) 
- (if (is output_fn None) (do (do (setv self.output_fn repr))) (do (if (callable output_fn) (do (do (setv self.output_fn output_fn))) (do (do (setv f (hy_symbol_mangle output_fn))) (if (in "." output_fn) (do (do (do (setv module (nth (f.rsplit "." 1) 0)) (setv f (nth (f.rsplit "." 1) 1)))) (do (setv self.output_fn (getattr (importlib.import_module module) f)))) (do (do (setv self.output_fn (get __builtins__ f))))))))) 
+ (if (is output_fn None) (do (do (setv self.output_fn repr))) (do (if (callable output_fn) (do (do (setv self.output_fn output_fn))) (do (do (setv f (hy_symbol_mangle output_fn))) (if (in "." output_fn) (do (do (setv _py2hy_anon_var_G_1235 (f.rsplit "." 1)) (do (setv module (nth _py2hy_anon_var_G_1235 0)) (setv f (nth _py2hy_anon_var_G_1235 1)))) (do (setv self.output_fn (getattr (importlib.import_module module) f)))) (do (do (setv self.output_fn (get __builtins__ f))))))))) 
  (code.InteractiveConsole.__init__ self :locals locals :filename filename)) 
  (defn runsource [self source &optional [filename "<input>"] [symbol "single"]] 
  "Using a hacky implementation of `return`" 

@@ -93,7 +93,7 @@
  (defn __new__ [cls num &kwargs kwargs &rest args] 
  "Using a hacky implementation of `return`" 
  (try (do (do (setv value ((. (super HyComplex cls) __new__) cls (strip_digit_separators num)))) 
- (when (isinstance num string_types) (do (do (do (setv p1 (nth ((. ((. (num.lstrip "+-") replace) "-" "+") partition) "+") 0)) (setv _ (nth ((. ((. (num.lstrip "+-") replace) "-" "+") partition) "+") 1)) (setv p2 (nth ((. ((. (num.lstrip "+-") replace) "-" "+") partition) "+") 2)))) 
+ (when (isinstance num string_types) (do (do (setv _py2hy_anon_var_G_1235 ((. ((. (num.lstrip "+-") replace) "-" "+") partition) "+")) (do (setv p1 (nth _py2hy_anon_var_G_1235 0)) (do) (setv p2 (nth _py2hy_anon_var_G_1235 2)))) 
  (if p2 (do (check_inf_nan_cap p1 value.real) (check_inf_nan_cap p2 value.imag)) (do (if (in "j" p1) (do (check_inf_nan_cap p1 value.imag)) (do (check_inf_nan_cap p1 value.real))))))) 
  (raise (Py2HyReturnException value))) (except [e Py2HyReturnException] e.retvalue))))
 (do (assoc _wrappers complex HyComplex))

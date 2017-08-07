@@ -173,7 +173,7 @@
  (defn t_string [p] 
  "Using a hacky implementation of `return`" 
  (try (do (do (setv s (get (. (get p 0) value) (slice None (- 1) None)))) 
- (do (do (setv header (nth (s.split "\"" 1) 0)) (setv s (nth (s.split "\"" 1) 1)))) 
+ (do (setv _py2hy_anon_var_G_1235 (s.split "\"" 1)) (do (setv header (nth _py2hy_anon_var_G_1235 0)) (setv s (nth _py2hy_anon_var_G_1235 1)))) 
  (do (setv header (header.replace "u" ""))) 
  (do (setv is_bytestring (in "b" header))) 
  (do (setv header (header.replace "b" ""))) 
@@ -196,7 +196,7 @@
  "Try to interpret `obj` as a number or keyword." 
  "Using a hacky implementation of `return`" 
  (try (do (try (do (raise (Py2HyReturnException (HyInteger obj)))) (except [e Py2HyReturnException] (raise e)) (except [ValueError] (do))) 
- (when (in "/" obj) (do (try (do (do (do (setv lhs (nth (obj.split "/") 0)) (setv rhs (nth (obj.split "/") 1)))) 
+ (when (in "/" obj) (do (try (do (do (setv _py2hy_anon_var_G_1236 (obj.split "/")) (do (setv lhs (nth _py2hy_anon_var_G_1236 0)) (setv rhs (nth _py2hy_anon_var_G_1236 1)))) 
  (raise (Py2HyReturnException (HyExpression [(HySymbol "fraction") (HyInteger lhs) (HyInteger rhs)])))) (except [e Py2HyReturnException] (raise e)) (except [ValueError] (do))))) 
  (try (do (raise (Py2HyReturnException (HyFloat obj)))) (except [e Py2HyReturnException] (raise e)) (except [ValueError] (do))) 
  (when (!= obj "j") (do (try (do (raise (Py2HyReturnException (HyComplex obj)))) (except [e Py2HyReturnException] (raise e)) (except [ValueError] (do))))) 
