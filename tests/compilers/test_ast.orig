@@ -2,7 +2,7 @@
 # This file is part of Hy, which is free software licensed under the Expat
 # license. See the LICENSE.
 
-from __future__ import unicode_literals
+# from __future__ import unicode_literals
 
 import hy
 from hyhy import HyString
@@ -12,6 +12,7 @@ from hyhy.importer import import_buffer_to_hst
 from hyhy.errors import HyCompileError, HyTypeError
 from hyhy.lex.exceptions import LexException
 from hyhy._compat import PY3
+import builtins
 
 import ast
 
@@ -477,7 +478,7 @@ def test_ast_unicode_vs_bytes():
     def f(x): return can_compile(x).body[0].value.s
     assert f('"hello"') == u"hello"
     assert type(f('"hello"')) is (str if PY3 else unicode)  # noqa
-    assert f('b"hello"') == (eval('b"hello"') if PY3 else "hello")
+    assert f('b"hello"') == (builtins.eval('b"hello"') if PY3 else "hello")
     assert type(f('b"hello"')) == (bytes if PY3 else str)
     assert f('b"\\xa0"') == (bytes([160]) if PY3 else chr(160))
 
