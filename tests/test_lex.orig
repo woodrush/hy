@@ -18,12 +18,14 @@ def test_lex_exception():
     with peoi(): tokenize("{foo bar")
     with peoi(): tokenize("(defn foo [bar]")
     with peoi(): tokenize("(foo \"bar")
+    return None
 
 
 def test_unbalanced_exception():
     """Ensure the tokenization fails on unbalanced expressions"""
     with lexe(): tokenize("(bar))")
     with lexe(): tokenize("(baz [quux]])")
+    return None
 
 
 def test_lex_single_quote_err():
@@ -165,6 +167,7 @@ def test_lex_bad_attrs():
     assert tokenize("a/1.foo")
     assert tokenize("1/a.foo")
     with lexe(): tokenize(":hello.foo")
+    return None
 
 
 def test_lex_line_counting():

@@ -1,7 +1,7 @@
 (import [rply [LexerGenerator]])
-(defclass Py2HyReturnException [Exception] 
- (defn __init__ [self retvalue] 
- (setv self.retvalue retvalue)))
+(defclass Py2HyReturnException [Exception]
+  (defn __init__ [self retvalue]
+    (setv self.retvalue retvalue)))
 (setv lg (LexerGenerator))
 (setv end_quote "(?![\\s\\)\\]\\}])")
 (setv identifier "[^()\\[\\]{}\\'\"\\s;]+")
