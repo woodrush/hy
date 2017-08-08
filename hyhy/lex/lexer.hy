@@ -1,8 +1,10 @@
 (import [rply [LexerGenerator]])
-(defclass Py2HyReturnException [Exception] (defn __init__ [self retvalue] (setv self.retvalue retvalue)))
-(do (setv lg (LexerGenerator)))
-(do (setv end_quote "(?![\\s\\)\\]\\}])"))
-(do (setv identifier "[^()\\[\\]{}\\'\"\\s;]+"))
+(defclass Py2HyReturnException [Exception] 
+ (defn __init__ [self retvalue] 
+ (setv self.retvalue retvalue)))
+(setv lg (LexerGenerator))
+(setv end_quote "(?![\\s\\)\\]\\}])")
+(setv identifier "[^()\\[\\]{}\\'\"\\s;]+")
 (lg.add "LPAREN" "\\(")
 (lg.add "RPAREN" "\\)")
 (lg.add "LBRACKET" "\\[")
@@ -16,7 +18,7 @@
 (lg.add "UNQUOTE" (% "~%s" end_quote))
 (lg.add "HASHSTARS" "#\\*+")
 (lg.add "HASHOTHER" (% "#%s" identifier))
-(do (setv partial_string "(?x)
+(setv partial_string "(?x)
     (?:u|r|ur|ru|b|br|rb)? # prefix
     \"  # start string
     (?:
@@ -26,10 +28,10 @@
        | \\\\u[0-9a-fA-F]{4}  # or unicode escape
        | \\\\U[0-9a-fA-F]{8}  # or long unicode escape
     )* # one or more times
-"))
+")
 (lg.add "STRING" (% "%s\"" partial_string))
 (lg.add "PARTIAL_STRING" partial_string)
 (lg.add "IDENTIFIER" identifier)
 (lg.ignore ";.*(?=\\r|\\n|$)")
 (lg.ignore "\\s+")
-(do (setv lexer (lg.build)))
+(setv lexer (lg.build))
