@@ -11,10 +11,7 @@
  (macro "test") 
  (defn tmac [&rest tree] 
  " Turn an expression into a list " 
- (try 
- [(raise (Py2HyReturnException (HyList tree)))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyList tree)))
 (defn test_preprocessor_simple [] 
  " Test basic macro expansion " 
  (setv obj (macroexpand (get (tokenize "(test \"one\" \"two\")") 0) (HyASTCompiler __name__))) 
@@ -32,6 +29,14 @@
 (defn test_preprocessor_exceptions [] 
  " Test that macro expansion raises appropriate exceptions" 
  (try 
- [(try (do (macroexpand (get (tokenize "(defn)") 0) (HyASTCompiler __name__)) (assert False)) (except [e Py2HyReturnException] (raise e)) (except [e HyMacroExpansionError] (assert (not_in "_hy_anon_fn_" (str e))) (assert (not_in "TypeError" (str e)))))] 
+ (try 
+ (do 
+ (macroexpand (get (tokenize "(defn)") 0) (HyASTCompiler __name__)) 
+ (assert False)) 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [e HyMacroExpansionError] 
+ (assert (not_in "_hy_anon_fn_" (str e))) 
+ (assert (not_in "TypeError" (str e))))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))

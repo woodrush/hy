@@ -20,7 +20,12 @@
  (setv testLoader (MetaLoader path)) 
  (defn _import_test [] 
  (try 
- [(try [(raise (Py2HyReturnException (testLoader.load_module "tests.resources.importer.a")))] (except [e Py2HyReturnException] (raise e)) (except [] (raise (Py2HyReturnException "Error"))))] 
+ (try 
+ (raise (Py2HyReturnException (testLoader.load_module "tests.resources.importer.a"))) 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [] 
+ (raise (Py2HyReturnException "Error")))) 
  (except [e Py2HyReturnException] 
  e.retvalue))) 
  (assert (= (_import_test) "Error")) 
@@ -33,7 +38,12 @@
  (do 
  (defn _import_error_test [] 
  (try 
- [(try [(import_buffer_to_ast "(import \"sys\")" "")] (except [e Py2HyReturnException] (raise e)) (except [HyTypeError] (raise (Py2HyReturnException "Error reported"))))] 
+ (try 
+ (import_buffer_to_ast "(import \"sys\")" "") 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [HyTypeError] 
+ (raise (Py2HyReturnException "Error reported")))) 
  (except [e Py2HyReturnException] 
  e.retvalue))) 
  (assert (= (_import_error_test) "Error reported")) 
@@ -48,7 +58,7 @@
  (f.write (hy.models.HyBytes [40 100 101 102 110 32 112 121 99 116 101 115 116 32 91 115 93 32 40 43 32 34 88 34 32 115 32 34 89 34 41 41])) 
  (f.close) 
  (try 
- [(os.remove (get_bytecode_path f.name))] 
+ (os.remove (get_bytecode_path f.name)) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [[IOError OSError]] 

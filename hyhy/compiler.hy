@@ -23,15 +23,11 @@
  (import [__builtin__ :as builtins])))
 (setv _compile_time_ns {})
 (defn compile_time_ns [module_name] 
- (try 
- (do 
  (setv ns (_compile_time_ns.get module_name)) 
  (when (is ns None) 
  (setv ns {"hyhy" hyhy "__name__" module_name}) 
  (assoc _compile_time_ns module_name ns)) 
- (raise (Py2HyReturnException ns))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ ns)
 (setv _stdlib {})
 (defn load_stdlib [] 
  (import [hyhy.core]) 
@@ -58,7 +54,7 @@
  (when PY3 
  (raise (Py2HyReturnException (str foobar)))) 
  (try 
- [(raise (Py2HyReturnException (str foobar)))] 
+ (raise (Py2HyReturnException (str foobar))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [UnicodeEncodeError] 
@@ -71,26 +67,22 @@
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn builds [_type] 
- (try 
- (do 
  (setv unpythonic_chars ["-"]) 
  (setv really_ok ["-"]) 
  (when (any (genexpr (in x unpythonic_chars) [x (str_type _type)])) 
  (when (not_in _type really_ok) 
  (raise (TypeError (% "Dear Hypster: `build' needs to be *post* translated strings... `%s' sucks." _type))))) 
  (defn _dec [fn_py2hy_mangling] 
- (try 
- (do 
  (assoc _compile_table _type fn_py2hy_mangling) 
- (raise (Py2HyReturnException fn_py2hy_mangling))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
- (raise (Py2HyReturnException _dec))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ fn_py2hy_mangling) 
+ _dec)
 (defn builds_if [_type condition] 
  (try 
- [(if condition (do (raise (Py2HyReturnException (builds _type)))) (do (raise (Py2HyReturnException (fn [fn_py2hy_mangling] fn_py2hy_mangling)))))] 
+ (if condition 
+ (do 
+ (raise (Py2HyReturnException (builds _type)))) 
+ (do 
+ (raise (Py2HyReturnException (fn [fn_py2hy_mangling] fn_py2hy_mangling))))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn spoof_positions [obj] 
@@ -148,12 +140,8 @@
  (with_decorator 
  property 
  (defn expr [self] 
- (try 
- (do 
  (setv self.__used_expr True) 
- (raise (Py2HyReturnException self._expr))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ self._expr)) 
  (with_decorator 
  expr.setter 
  (defn expr [self value] 
@@ -164,10 +152,7 @@
  ((. (get self.imports mod) update) imports)) 
  (defn is_expr [self] 
  "Check whether I am a pure expression" 
- (try 
- [(raise (Py2HyReturnException (and self._expr (not (or self.imports self.stmts)))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (and self._expr (not (or self.imports self.stmts)))) 
  (with_decorator 
  property 
  (defn force_expr [self] 
@@ -213,16 +198,15 @@
         " 
  (setv new_name (ast_str new_name)) 
  (for [var self.temp_variables] 
- (if (isinstance var ast.Name) 
+ (cond 
+ [(isinstance var ast.Name) 
  (do 
  (setv var.id new_name) 
- (setv var.arg new_name)) 
- (do 
- (if (isinstance var ast.FunctionDef) 
- (do 
- (setv var.name new_name)) 
- (do 
- (raise (TypeError (% "Don't know how to rename a %s!" var.__class__.__name__)))))))) 
+ (setv var.arg new_name))] 
+ [(isinstance var ast.FunctionDef) 
+ (setv var.name new_name)] 
+ [True 
+ (raise (TypeError (% "Don't know how to rename a %s!" var.__class__.__name__)))])) 
  (setv self.temp_variables [])) 
  (defn __add__ [self other] 
  (try 
@@ -250,10 +234,9 @@
  (except [e Py2HyReturnException] 
  e.retvalue))) 
  (defn __str__ [self] 
- (try 
- [(raise (Py2HyReturnException (% "Result(imports=[%s], stmts=[%s], expr=%s, contains_yield=%s)" (, ((. ", " join) (genexpr (ast.dump x) [x self.imports])) ((. ", " join) (genexpr (ast.dump x) [x self.stmts])) (if self.expr (ast.dump self.expr) None) self.contains_yield))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (% "Result(imports=[%s], stmts=[%s], expr=%s, contains_yield=%s)" (, ((. ", " join) (genexpr (ast.dump x) [x self.imports])) ((. ", " join) (genexpr (ast.dump x) [x self.stmts])) (if self.expr 
+ (ast.dump self.expr) 
+ None) self.contains_yield))))
 (defn _branch [results] 
  "Make a branch out of a list of Result objects
 
@@ -262,29 +245,19 @@
 
     We keep the expression context of the last argument for the returned Result
     " 
- (try 
- (do 
  (setv results (list results)) 
  (setv ret (Result)) 
  (for [result (get results (slice None (- 1) None))] 
- (setv ret (+ ret result)) 
- (setv ret (+ ret (result.expr_as_stmt)))) 
+ (+= ret result) 
+ (+= ret (result.expr_as_stmt))) 
  (for [result (get results (slice (- 1) None None))] 
- (setv ret (+ ret result))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (+= ret result)) 
+ ret)
 (defn _raise_wrong_args_number [expression error] 
  (raise (HyTypeError expression (% error (, (expression.pop 0) (len expression))))))
 (defn checkargs [&optional [exact None] [min None] [max None] [even None] [multiple None]] 
- (try 
- (do 
  (defn _dec [fn_py2hy_mangling] 
- (try 
- (do 
  (defn checker [self expression] 
- (try 
- (do 
  (when (and (is_not exact None) (!= (- (len expression) 1) exact)) 
  (_raise_wrong_args_number expression (% "`%%s' needs %d arguments, got %%d" exact))) 
  (when (and (is_not min None) (< (- (len expression) 1) min)) 
@@ -300,22 +273,13 @@
  (when (is_not multiple None) 
  (when (not (in (- (len expression) 1) multiple)) 
  (setv choices ((. ", " join) (list_comp (str val) [val (get multiple (slice None (- 1) None))]))) 
- (setv choices (+ choices (% " or %s" (get multiple (- 1))))) 
+ (+= choices (% " or %s" (get multiple (- 1)))) 
  (_raise_wrong_args_number expression (% "`%%s' needs %s arguments, got %%d" choices)))) 
- (raise (Py2HyReturnException (fn_py2hy_mangling self expression)))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
- (raise (Py2HyReturnException checker))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
- (raise (Py2HyReturnException _dec))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (fn_py2hy_mangling self expression)) 
+ checker) 
+ _dec)
 (defn is_unpack [kind x] 
- (try 
- [(raise (Py2HyReturnException (and (isinstance x HyExpression) (> (len x) 0) (isinstance (get x 0) HySymbol) (= (get x 0) (+ "unpack_" kind)))))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (and (isinstance x HyExpression) (> (len x) 0) (isinstance (get x 0) HySymbol) (= (get x 0) (+ "unpack_" kind))))
 (defclass HyASTCompiler [object] 
  (defn __init__ [self module_name] 
  (setv self.allow_builtins (module_name.startswith "hyhy.core")) 
@@ -327,42 +291,30 @@
  (when (not (module_name.startswith "hyhy.core")) 
  (load_stdlib))) 
  (defn get_anon_var [self] 
- (try 
- (do 
- (setv self.anon_var_count (+ self.anon_var_count 1)) 
- (raise (Py2HyReturnException (% "_hy_anon_var_%s" self.anon_var_count)))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (+= self.anon_var_count 1) 
+ (% "_hy_anon_var_%s" self.anon_var_count)) 
  (defn get_anon_fn [self] 
- (try 
- (do 
- (setv self.anon_fn_count (+ self.anon_fn_count 1)) 
- (raise (Py2HyReturnException (% "_hy_anon_fn_%d" self.anon_fn_count)))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (+= self.anon_fn_count 1) 
+ (% "_hy_anon_fn_%d" self.anon_fn_count)) 
  (defn update_imports [self result] 
  "Retrieve the imports from the result object" 
  (for [mod result.imports] 
  ((. (get self.imports mod) update) (get result.imports mod)))) 
  (defn imports_as_stmts [self expr] 
  "Convert the Result's imports to statements" 
- (try 
- (do 
  (setv ret (Result)) 
  (for [[module names] (self.imports.items)] 
  (when (in None names) 
  (setv e ((. (HyExpression [(HySymbol "import") (HySymbol module)]) replace) expr)) 
  (spoof_positions e) 
- (setv ret (+ ret (self.compile e)))) 
+ (+= ret (self.compile e))) 
  (setv names (sorted (genexpr name [name names] (and name)))) 
  (when names 
  (setv e ((. (HyExpression [(HySymbol "import") (HyList [(HySymbol module) (HyList (list_comp (HySymbol name) [name names]))])]) replace) expr)) 
  (spoof_positions e) 
- (setv ret (+ ret (self.compile e))))) 
+ (+= ret (self.compile e)))) 
  (setv self.imports (defaultdict set)) 
- (raise (Py2HyReturnException ret.stmts))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ ret.stmts) 
  (defn compile_atom [self atom_type atom] 
  (try 
  (do 
@@ -415,49 +367,53 @@
  (setv oldpy_kwargs None) 
  (setv exprs_iter (iter exprs)) 
  (for [expr exprs_iter] 
- (if (and (not PY35) oldpy_unpack (is_unpack "iterable" expr)) 
+ (cond 
+ [(and (not PY35) oldpy_unpack (is_unpack "iterable" expr)) 
  (do 
  (when oldpy_starargs 
  (raise (HyTypeError expr "Pythons < 3.5 allow only one `unpack-iterable` per call"))) 
  (setv oldpy_starargs (self.compile (get expr 1))) 
- (setv ret (+ ret oldpy_starargs)) 
- (setv oldpy_starargs oldpy_starargs.force_expr)) 
+ (+= ret oldpy_starargs) 
+ (setv oldpy_starargs oldpy_starargs.force_expr))] 
+ [(is_unpack "mapping" expr) 
  (do 
- (if (is_unpack "mapping" expr) 
- (do 
- (setv ret (+ ret (self.compile (get expr 1)))) 
- (if PY35 
- (do 
- (if dict_display 
+ (+= ret (self.compile (get expr 1))) 
+ (cond 
+ [PY35 
+ (cond 
+ [dict_display 
  (do 
  (compiled_exprs.append None) 
- (compiled_exprs.append ret.force_expr)) 
+ (compiled_exprs.append ret.force_expr))] 
+ [with_kwargs 
+ (keywords.append (ast.keyword :arg None :value ret.force_expr :lineno expr.start_line :col_offset expr.start_column))] 
+ [True 
+ (do)])] 
+ [oldpy_unpack 
  (do 
- (when with_kwargs 
- (keywords.append (ast.keyword :arg None :value ret.force_expr :lineno expr.start_line :col_offset expr.start_column)))))) 
- (do 
- (when oldpy_unpack 
  (when oldpy_kwargs 
  (raise (HyTypeError expr "Pythons < 3.5 allow only one `unpack-mapping` per call"))) 
- (setv oldpy_kwargs ret.force_expr))))) 
- (do 
+ (setv oldpy_kwargs ret.force_expr))] 
+ [True 
+ (do)]))] 
+ [True 
  (if (and with_kwargs (isinstance expr HyKeyword)) 
  (do 
  (try 
- [(setv value (next exprs_iter))] 
+ (setv value (next exprs_iter)) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [StopIteration] 
  (raise (HyTypeError expr ((. "Keyword argument {kw} needs a value." format) :kw (str (get expr (slice 1 None None)))))))) 
  (setv compiled_value (self.compile value)) 
- (setv ret (+ ret compiled_value)) 
+ (+= ret compiled_value) 
  (setv keyword (str (get expr (slice 2 None None)))) 
  (when (and (in "-" keyword) (!= keyword "-")) 
  (setv keyword (keyword.replace "-" "_"))) 
  (keywords.append (ast.keyword :arg keyword :value compiled_value.force_expr :lineno expr.start_line :col_offset expr.start_column))) 
  (do 
- (setv ret (+ ret (self.compile expr))) 
- (compiled_exprs.append ret.force_expr)))))))) 
+ (+= ret (self.compile expr)) 
+ (compiled_exprs.append ret.force_expr)))])) 
  (if oldpy_unpack 
  (do 
  (raise (Py2HyReturnException (, compiled_exprs ret keywords oldpy_starargs oldpy_kwargs)))) 
@@ -466,14 +422,9 @@
  (except [e Py2HyReturnException] 
  e.retvalue))) 
  (defn _compile_branch [self exprs] 
- (try 
- [(raise (Py2HyReturnException (_branch (genexpr (self.compile expr) [expr exprs]))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (_branch (genexpr (self.compile expr) [expr exprs]))) 
  (defn _parse_lambda_list [self exprs] 
  " Return FunctionDef parameter values from lambda list." 
- (try 
- (do 
  (setv ll_keywords (, "&rest" "&optional" "&key" "&kwonly" "&kwargs")) 
  (setv ret (Result)) 
  (setv args []) 
@@ -485,30 +436,28 @@
  (setv lambda_keyword None) 
  (for [expr exprs] 
  (when (in expr ll_keywords) 
- (if (= expr "&optional") 
+ (cond 
+ [(= expr "&optional") 
  (do 
  (when (> (len defaults) 0) 
  (raise (HyTypeError expr "There can only be &optional arguments or one &key argument"))) 
- (setv lambda_keyword expr)) 
- (do 
- (if (in expr (, "&rest" "&key" "&kwonly" "&kwargs")) 
- (do 
- (setv lambda_keyword expr)) 
- (do 
- (raise (HyTypeError expr ((. "{0} is in an invalid position." format) (repr expr)))))))) 
+ (setv lambda_keyword expr))] 
+ [(in expr (, "&rest" "&key" "&kwonly" "&kwargs")) 
+ (setv lambda_keyword expr)] 
+ [True 
+ (raise (HyTypeError expr ((. "{0} is in an invalid position." format) (repr expr))))]) 
  (continue)) 
- (if (is lambda_keyword None) 
- (do 
- (args.append expr)) 
- (do 
- (if (= lambda_keyword "&rest") 
+ (cond 
+ [(is lambda_keyword None) 
+ (args.append expr)] 
+ [(= lambda_keyword "&rest") 
  (do 
  (when varargs 
  (raise (HyTypeError expr "There can only be one &rest argument"))) 
- (setv varargs expr)) 
- (do 
- (if (= lambda_keyword "&key") 
- (do 
+ (setv varargs expr))] 
+ [True 
+ (cond 
+ [(= lambda_keyword "&key") 
  (if (!= (type expr) HyDict) 
  (do 
  (raise (HyTypeError expr "There can only be one &key argument"))) 
@@ -520,29 +469,29 @@
  (when (not (isinstance k HyString)) 
  (raise (HyTypeError expr "Only strings can be used as parameter names"))) 
  (args.append k) 
- (setv ret (+ ret (self.compile v))) 
- (defaults.append ret.force_expr))))) 
- (do 
- (if (= lambda_keyword "&optional") 
+ (+= ret (self.compile v)) 
+ (defaults.append ret.force_expr))))] 
+ [(= lambda_keyword "&optional") 
  (do 
  (if (isinstance expr HyList) 
  (do 
  (when (not (= (len expr) 2)) 
  (raise (HyTypeError expr "optional args should be bare names or 2-item lists"))) 
  (do 
- (setv _py2hy_anon_var_G_1237 expr) 
- (setv k (nth _py2hy_anon_var_G_1237 0)) 
- (setv v (nth _py2hy_anon_var_G_1237 1)))) 
+ (setv _py2hy_anon_var_G_1315 expr) 
+ (setv k (nth _py2hy_anon_var_G_1315 0)) 
+ (setv v (nth _py2hy_anon_var_G_1315 1)))) 
  (do 
  (setv k expr) 
  (setv v ((. (HySymbol "None") replace) k)))) 
  (when (not (isinstance k HyString)) 
  (raise (HyTypeError expr "Only strings can be used as parameter names"))) 
  (args.append k) 
- (setv ret (+ ret (self.compile v))) 
- (defaults.append ret.force_expr)) 
- (do 
- (if (= lambda_keyword "&kwonly") 
+ (+= ret (self.compile v)) 
+ (defaults.append ret.force_expr))] 
+ [True 
+ (cond 
+ [(= lambda_keyword "&kwonly") 
  (do 
  (when (not PY3) 
  (raise (HyTypeError expr "keyword-only arguments are only available under Python 3"))) 
@@ -551,64 +500,57 @@
  (when (!= (len expr) 2) 
  (raise (HyTypeError expr "keyword-only args should be bare names or 2-item lists"))) 
  (do 
- (setv _py2hy_anon_var_G_1236 expr) 
- (setv k (nth _py2hy_anon_var_G_1236 0)) 
- (setv v (nth _py2hy_anon_var_G_1236 1))) 
+ (setv _py2hy_anon_var_G_1319 expr) 
+ (setv k (nth _py2hy_anon_var_G_1319 0)) 
+ (setv v (nth _py2hy_anon_var_G_1319 1))) 
  (kwonlyargs.append k) 
- (setv ret (+ ret (self.compile v))) 
+ (+= ret (self.compile v)) 
  (kwonlydefaults.append ret.force_expr)) 
  (do 
  (setv k expr) 
  (kwonlyargs.append k) 
- (kwonlydefaults.append None)))) 
+ (kwonlydefaults.append None))))] 
+ [(= lambda_keyword "&kwargs") 
  (do 
- (when (= lambda_keyword "&kwargs") 
  (when kwargs 
  (raise (HyTypeError expr "There can only be one &kwargs argument"))) 
- (setv kwargs expr))))))))))))) 
- (raise (Py2HyReturnException (, ret args defaults varargs kwonlyargs kwonlydefaults kwargs)))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (setv kwargs expr))] 
+ [True 
+ (do)])])])) 
+ (, ret args defaults varargs kwonlyargs kwonlydefaults kwargs)) 
  (defn _storeize [self expr name &optional [func None]] 
  "Return a new `name` object with an ast.Store() context" 
- (try 
- (do 
  (when (not func) 
  (setv func ast.Store)) 
  (when (isinstance name Result) 
  (when (not (name.is_expr)) 
  (raise (HyTypeError expr "Can't assign or delete a non-expression"))) 
  (setv name name.expr)) 
- (if (isinstance name (, ast.Tuple ast.List)) 
+ (cond 
+ [(isinstance name (, ast.Tuple ast.List)) 
  (do 
  (setv typ (type name)) 
  (setv new_elts []) 
  (for [x name.elts] 
  (new_elts.append (self._storeize expr x func))) 
- (setv new_name (typ :elts new_elts))) 
- (do 
- (if (isinstance name ast.Name) 
- (do 
- (setv new_name (ast.Name :id name.id :arg name.arg))) 
- (do 
- (if (isinstance name ast.Subscript) 
- (do 
- (setv new_name (ast.Subscript :value name.value :slice name.slice))) 
- (do 
- (if (isinstance name ast.Attribute) 
- (do 
- (setv new_name (ast.Attribute :value name.value :attr name.attr))) 
- (do 
+ (setv new_name (typ :elts new_elts)))] 
+ [(isinstance name ast.Name) 
+ (setv new_name (ast.Name :id name.id :arg name.arg))] 
+ [True 
+ (cond 
+ [(isinstance name ast.Subscript) 
+ (setv new_name (ast.Subscript :value name.value :slice name.slice))] 
+ [(isinstance name ast.Attribute) 
+ (setv new_name (ast.Attribute :value name.value :attr name.attr))] 
+ [True 
  (if (and PY3 (isinstance name ast.Starred)) 
  (do 
  (setv new_name (ast.Starred :value (self._storeize expr name.value func)))) 
  (do 
- (raise (HyTypeError expr (% "Can't assign or delete a %s" (. (type expr) __name__)))))))))))))) 
+ (raise (HyTypeError expr (% "Can't assign or delete a %s" (. (type expr) __name__))))))])]) 
  (setv new_name.ctx (func)) 
  (ast.copy_location new_name name) 
- (raise (Py2HyReturnException new_name))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ new_name) 
  (defn _render_quoted_form [self form level] 
  "
         Render a quoted form as a new HyExpression.
@@ -632,12 +574,13 @@
  (raise (Py2HyReturnException (, (set) (get form 1) (= (get form 0) "unquote_splice"))))))) 
  (when (isinstance form HyExpression) 
  (when (and form (= (get form 0) "quasiquote")) 
- (setv level (+ level 1))) 
+ (+= level 1)) 
  (when (and form (in (get form 0) (, "unquote" "unquote_splice"))) 
- (setv level (- level 1)))) 
+ (_= level 1))) 
  (setv name form.__class__.__name__) 
  (setv imports (set [name])) 
- (if (isinstance form (, HyList HyDict HySet)) 
+ (cond 
+ [(isinstance form (, HyList HyDict HySet)) 
  (do 
  (if (not form) 
  (do 
@@ -646,10 +589,10 @@
  (setv contents (HyExpression [(HySymbol "+") (HyList)])))) 
  (for [x form] 
  (do 
- (setv _py2hy_anon_var_G_1240 (self._render_quoted_form x level)) 
- (setv f_imports (nth _py2hy_anon_var_G_1240 0)) 
- (setv f_contents (nth _py2hy_anon_var_G_1240 1)) 
- (setv splice (nth _py2hy_anon_var_G_1240 2))) 
+ (setv _py2hy_anon_var_G_1325 (self._render_quoted_form x level)) 
+ (setv f_imports (nth _py2hy_anon_var_G_1325 0)) 
+ (setv f_contents (nth _py2hy_anon_var_G_1325 1)) 
+ (setv splice (nth _py2hy_anon_var_G_1325 2))) 
  (imports.update f_imports) 
  (if splice 
  (do 
@@ -657,33 +600,32 @@
  (do 
  (setv to_add (HyList [f_contents])))) 
  (contents.append to_add)) 
- (raise (Py2HyReturnException (, imports ((. (HyExpression [(HySymbol name) contents]) replace) form) False)))) 
- (do 
- (if (isinstance form HyCons) 
+ (raise (Py2HyReturnException (, imports ((. (HyExpression [(HySymbol name) contents]) replace) form) False))))] 
+ [(isinstance form HyCons) 
  (do 
  (setv ret (HyExpression [(HySymbol name)])) 
  (do 
- (setv _py2hy_anon_var_G_1238 (self._render_quoted_form form.car level)) 
- (setv nimport (nth _py2hy_anon_var_G_1238 0)) 
- (setv contents (nth _py2hy_anon_var_G_1238 1)) 
- (setv splice (nth _py2hy_anon_var_G_1238 2))) 
+ (setv _py2hy_anon_var_G_1326 (self._render_quoted_form form.car level)) 
+ (setv nimport (nth _py2hy_anon_var_G_1326 0)) 
+ (setv contents (nth _py2hy_anon_var_G_1326 1)) 
+ (setv splice (nth _py2hy_anon_var_G_1326 2))) 
  (when splice 
  (raise (HyTypeError form "Can't splice dotted lists yet"))) 
  (imports.update nimport) 
  (ret.append contents) 
  (do 
- (setv _py2hy_anon_var_G_1239 (self._render_quoted_form form.cdr level)) 
- (setv nimport (nth _py2hy_anon_var_G_1239 0)) 
- (setv contents (nth _py2hy_anon_var_G_1239 1)) 
- (setv splice (nth _py2hy_anon_var_G_1239 2))) 
+ (setv _py2hy_anon_var_G_1327 (self._render_quoted_form form.cdr level)) 
+ (setv nimport (nth _py2hy_anon_var_G_1327 0)) 
+ (setv contents (nth _py2hy_anon_var_G_1327 1)) 
+ (setv splice (nth _py2hy_anon_var_G_1327 2))) 
  (when splice 
  (raise (HyTypeError form "Can't splice the cdr of a cons"))) 
  (imports.update nimport) 
  (ret.append contents) 
- (raise (Py2HyReturnException (, imports (ret.replace form) False)))) 
- (do 
+ (raise (Py2HyReturnException (, imports (ret.replace form) False))))] 
+ [True 
  (when (isinstance form HySymbol) 
- (raise (Py2HyReturnException (, imports ((. (HyExpression [(HySymbol name) (HyString form)]) replace) form) False)))))))) 
+ (raise (Py2HyReturnException (, imports ((. (HyExpression [(HySymbol name) (HyString form)]) replace) form) False))))]) 
  (raise (Py2HyReturnException (, imports ((. (HyExpression [(HySymbol name) form]) replace) form) False)))) 
  (except [e Py2HyReturnException] 
  e.retvalue))) 
@@ -692,23 +634,19 @@
  (builds "quasiquote") 
  (checkargs :exact 1) 
  (defn compile_quote [self entries] 
- (try 
- (do 
  (if (= (get entries 0) "quote") 
  (do 
  (setv level (float "inf"))) 
  (do 
  (setv level 0))) 
  (do 
- (setv _py2hy_anon_var_G_1241 (self._render_quoted_form (get entries 1) level)) 
- (setv imports (nth _py2hy_anon_var_G_1241 0)) 
- (setv stmts (nth _py2hy_anon_var_G_1241 1)) 
- (setv splice (nth _py2hy_anon_var_G_1241 2))) 
+ (setv _py2hy_anon_var_G_1329 (self._render_quoted_form (get entries 1) level)) 
+ (setv imports (nth _py2hy_anon_var_G_1329 0)) 
+ (setv stmts (nth _py2hy_anon_var_G_1329 1)) 
+ (setv splice (nth _py2hy_anon_var_G_1329 2))) 
  (setv ret (self.compile stmts)) 
  (ret.add_imports "hyhy" imports) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ ret)) 
  (with_decorator 
  (builds "unquote") 
  (builds "unquote_splicing") 
@@ -718,15 +656,11 @@
  (builds "unpack_iterable") 
  (checkargs :exact 1) 
  (defn compile_unpack_iterable [self expr] 
- (try 
- (do 
  (when (not PY3) 
  (raise (HyTypeError expr "`unpack-iterable` isn't allowed here"))) 
  (setv ret (self.compile (get expr 1))) 
- (setv ret (+ ret (ast.Starred :value ret.force_expr :lineno expr.start_line :col_offset expr.start_column :ctx (ast.Load)))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (ast.Starred :value ret.force_expr :lineno expr.start_line :col_offset expr.start_column :ctx (ast.Load))) 
+ ret)) 
  (with_decorator 
  (builds "unpack_mapping") 
  (checkargs :exact 1) 
@@ -735,22 +669,16 @@
  (with_decorator 
  (builds "do") 
  (defn compile_do [self expression] 
- (try 
- (do 
  (expression.pop 0) 
- (raise (Py2HyReturnException (self._compile_branch expression)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self._compile_branch expression))) 
  (with_decorator 
  (builds "raise") 
  (checkargs :multiple [0 1 3]) 
  (defn compile_raise_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv ret (Result)) 
  (when expr 
- (setv ret (+ ret (self.compile (expr.pop 0))))) 
+ (+= ret (self.compile (expr.pop 0)))) 
  (setv cause None) 
  (when (and (= (len expr) 2) (= (get expr 0) (HyKeyword ":from"))) 
  (when (not PY3) 
@@ -758,10 +686,8 @@
  (expr.pop 0) 
  (setv cause (self.compile (expr.pop 0))) 
  (setv cause cause.expr)) 
- (setv ret (+ ret (ast.Raise :lineno expr.start_line :col_offset expr.start_column :type ret.expr :exc ret.expr :inst None :tback None :cause cause))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (ast.Raise :lineno expr.start_line :col_offset expr.start_column :type ret.expr :exc ret.expr :inst None :tback None :cause cause)) 
+ ret)) 
  (with_decorator 
  (builds "try") 
  (checkargs :min 2) 
@@ -781,18 +707,18 @@
  (setv handler_results (Result)) 
  (setv handlers []) 
  (while (and expr (= (get (get expr 0) 0) (HySymbol "except"))) 
- (setv handler_results (+ handler_results (self._compile_catch_expression (expr.pop 0) name))) 
+ (+= handler_results (self._compile_catch_expression (expr.pop 0) name)) 
  (handlers.append (handler_results.stmts.pop))) 
  (setv orelse []) 
  (when (and expr (= (get (get expr 0) 0) (HySymbol "else"))) 
  (setv orelse (self._compile_branch (get (expr.pop 0) (slice 1 None None)))) 
- (setv orelse (+ orelse (ast.Assign :targets [name] :value orelse.force_expr :lineno expr.start_line :col_offset expr.start_column))) 
- (setv orelse (+ orelse (orelse.expr_as_stmt))) 
+ (+= orelse (ast.Assign :targets [name] :value orelse.force_expr :lineno expr.start_line :col_offset expr.start_column)) 
+ (+= orelse (orelse.expr_as_stmt)) 
  (setv orelse orelse.stmts)) 
  (setv finalbody []) 
  (when (and expr (= (get (get expr 0) 0) (HySymbol "finally"))) 
  (setv finalbody (self._compile_branch (get (expr.pop 0) (slice 1 None None)))) 
- (setv finalbody (+ finalbody (finalbody.expr_as_stmt))) 
+ (+= finalbody (finalbody.expr_as_stmt)) 
  (setv finalbody finalbody.stmts)) 
  (when expr 
  (when (in (get (get expr 0) 0) (, "except" "else" "finally")) 
@@ -803,9 +729,9 @@
  (when (not (or handlers finalbody)) 
  (raise (HyTypeError expr "`try' must have an `except' or `finally' clause"))) 
  (setv ret handler_results) 
- (setv body (+ body (if orelse 
+ (+= body (if orelse 
  (body.expr_as_stmt) 
- (ast.Assign :targets [name] :value body.force_expr :lineno expr.start_line :col_offset expr.start_column)))) 
+ (ast.Assign :targets [name] :value body.force_expr :lineno expr.start_line :col_offset expr.start_column))) 
  (setv body (or body.stmts [(ast.Pass :lineno expr.start_line :col_offset expr.start_column)])) 
  (when PY3 
  (raise (Py2HyReturnException (+ (+ ret (ast.Try :lineno expr.start_line :col_offset expr.start_column :body body :handlers handlers :orelse orelse :finalbody finalbody)) returnable)))) 
@@ -821,8 +747,6 @@
  (defn magic_internal_form [self expr] 
  (raise (HyTypeError expr (% "Error: `%s' can't be used like that." (get expr 0)))))) 
  (defn _compile_catch_expression [self expr var] 
- (try 
- (do 
  (setv catch (expr.pop 0)) 
  (setv exceptions (if expr 
  (expr.pop 0) 
@@ -844,32 +768,28 @@
  (setv exceptions_list (if exceptions 
  (exceptions.pop 0) 
  [])) 
- (if (isinstance exceptions_list list) 
- (do 
+ (cond 
+ [(isinstance exceptions_list list) 
  (if (len exceptions_list) 
  (do 
  (do 
- (setv _py2hy_anon_var_G_1242 (self._compile_collect exceptions_list)) 
- (setv elts (nth _py2hy_anon_var_G_1242 0)) 
- (setv _type (nth _py2hy_anon_var_G_1242 1))) 
- (setv _type (+ _type (ast.Tuple :elts elts :lineno expr.start_line :col_offset expr.start_column :ctx (ast.Load))))) 
+ (setv _py2hy_anon_var_G_1337 (self._compile_collect exceptions_list)) 
+ (setv elts (nth _py2hy_anon_var_G_1337 0)) 
+ (setv _type (nth _py2hy_anon_var_G_1337 1))) 
+ (+= _type (ast.Tuple :elts elts :lineno expr.start_line :col_offset expr.start_column :ctx (ast.Load)))) 
  (do 
- (setv _type (Result))))) 
- (do 
- (if (isinstance exceptions_list HySymbol) 
- (do 
- (setv _type (self.compile exceptions_list))) 
- (do 
- (raise (HyTypeError exceptions (% "`%s' needs a valid exception list" catch))))))) 
+ (setv _type (Result))))] 
+ [(isinstance exceptions_list HySymbol) 
+ (setv _type (self.compile exceptions_list))] 
+ [True 
+ (raise (HyTypeError exceptions (% "`%s' needs a valid exception list" catch)))]) 
  (setv body (self._compile_branch expr)) 
- (setv body (+ body (ast.Assign :targets [var] :value body.force_expr :lineno expr.start_line :col_offset expr.start_column))) 
- (setv body (+ body (body.expr_as_stmt))) 
+ (+= body (ast.Assign :targets [var] :value body.force_expr :lineno expr.start_line :col_offset expr.start_column)) 
+ (+= body (body.expr_as_stmt)) 
  (setv body body.stmts) 
  (when (not body) 
  (setv body [(ast.Pass :lineno expr.start_line :col_offset expr.start_column)])) 
- (raise (Py2HyReturnException (+ _type (ast.ExceptHandler :lineno expr.start_line :col_offset expr.start_column :type _type.expr :name name :body body))))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (+ _type (ast.ExceptHandler :lineno expr.start_line :col_offset expr.start_column :type _type.expr :name name :body body))) 
  (with_decorator 
  (builds "if*") 
  (checkargs :min 2 :max 3) 
@@ -877,13 +797,13 @@
  (try 
  (do 
  (expression.pop 0) 
- (setv cond (self.compile (expression.pop 0))) 
+ (setv cond_py2hy_mangling (self.compile (expression.pop 0))) 
  (setv body (self.compile (expression.pop 0))) 
  (setv orel (Result)) 
  (do 
- (setv _py2hy_anon_var_G_1243 False) 
- (setv nested _py2hy_anon_var_G_1243) 
- (setv root _py2hy_anon_var_G_1243)) 
+ (setv _py2hy_anon_var_G_1338 False) 
+ (setv nested _py2hy_anon_var_G_1338) 
+ (setv root _py2hy_anon_var_G_1338)) 
  (when expression 
  (setv orel_expr (expression.pop 0)) 
  (when (and (isinstance orel_expr HyExpression) (isinstance (get orel_expr 0) HySymbol) (= (get orel_expr 0) "if*")) 
@@ -891,33 +811,34 @@
  (setv nested True) 
  (setv self.temp_if (or self.temp_if (self.get_anon_var)))) 
  (setv orel (self.compile orel_expr))) 
- (when (and (not cond.stmts) (isinstance cond.force_expr ast.Name)) 
- (setv name cond.force_expr.id) 
+ (when (and (not cond_py2hy_mangling.stmts) (isinstance cond_py2hy_mangling.force_expr ast.Name)) 
+ (setv name cond_py2hy_mangling.force_expr.id) 
  (setv branch None) 
- (if (= name "True") 
- (do 
- (setv branch body)) 
- (do 
- (when (in name (, "False" "None")) 
- (setv branch orel)))) 
+ (cond 
+ [(= name "True") 
+ (setv branch body)] 
+ [(in name (, "False" "None")) 
+ (setv branch orel)] 
+ [True 
+ (do)]) 
  (when (is_not branch None) 
  (when (and self.temp_if branch.stmts) 
  (setv name (ast.Name :id (ast_str self.temp_if) :arg (ast_str self.temp_if) :ctx (ast.Store) :lineno expression.start_line :col_offset expression.start_column)) 
- (setv branch (+ branch (ast.Assign :targets [name] :value body.force_expr :lineno expression.start_line :col_offset expression.start_column)))) 
+ (+= branch (ast.Assign :targets [name] :value body.force_expr :lineno expression.start_line :col_offset expression.start_column))) 
  (raise (Py2HyReturnException branch)))) 
- (setv ret cond) 
+ (setv ret cond_py2hy_mangling) 
  (if (or body.stmts orel.stmts) 
  (do 
  (setv var (or self.temp_if (self.get_anon_var))) 
  (setv name (ast.Name :id (ast_str var) :arg (ast_str var) :ctx (ast.Store) :lineno expression.start_line :col_offset expression.start_column)) 
- (setv body (+ body (ast.Assign :targets [name] :value body.force_expr :lineno expression.start_line :col_offset expression.start_column))) 
+ (+= body (ast.Assign :targets [name] :value body.force_expr :lineno expression.start_line :col_offset expression.start_column)) 
  (when (or (not nested) (not orel.stmts) (and (not root) (!= var self.temp_if))) 
- (setv orel (+ orel (ast.Assign :targets [name] :value orel.force_expr :lineno expression.start_line :col_offset expression.start_column)))) 
- (setv ret (+ ret (ast.If :test ret.force_expr :body body.stmts :orelse orel.stmts :lineno expression.start_line :col_offset expression.start_column))) 
+ (+= orel (ast.Assign :targets [name] :value orel.force_expr :lineno expression.start_line :col_offset expression.start_column))) 
+ (+= ret (ast.If :test ret.force_expr :body body.stmts :orelse orel.stmts :lineno expression.start_line :col_offset expression.start_column)) 
  (setv expr_name (ast.Name :id (ast_str var) :arg (ast_str var) :ctx (ast.Load) :lineno expression.start_line :col_offset expression.start_column)) 
- (setv ret (+ ret (Result :expr expr_name :temp_variables [expr_name name])))) 
+ (+= ret (Result :expr expr_name :temp_variables [expr_name name]))) 
  (do 
- (setv ret (+ ret (ast.IfExp :test ret.force_expr :body body.force_expr :orelse orel.force_expr :lineno expression.start_line :col_offset expression.start_column))))) 
+ (+= ret (ast.IfExp :test ret.force_expr :body body.force_expr :orelse orel.force_expr :lineno expression.start_line :col_offset expression.start_column)))) 
  (when root 
  (setv self.temp_if None)) 
  (raise (Py2HyReturnException ret))) 
@@ -926,27 +847,17 @@
  (with_decorator 
  (builds "break") 
  (defn compile_break_expression [self expr] 
- (try 
- (do 
  (setv ret (ast.Break :lineno expr.start_line :col_offset expr.start_column)) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ ret)) 
  (with_decorator 
  (builds "continue") 
  (defn compile_continue_expression [self expr] 
- (try 
- (do 
  (setv ret (ast.Continue :lineno expr.start_line :col_offset expr.start_column)) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ ret)) 
  (with_decorator 
  (builds "assert") 
  (checkargs :min 1 :max 2) 
  (defn compile_assert_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv e (expr.pop 0)) 
  (if (= (len expr) 1) 
@@ -955,16 +866,12 @@
  (do 
  (setv msg None))) 
  (setv ret (self.compile e)) 
- (setv ret (+ ret (ast.Assert :test ret.force_expr :msg msg :lineno e.start_line :col_offset e.start_column))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (ast.Assert :test ret.force_expr :msg msg :lineno e.start_line :col_offset e.start_column)) 
+ ret)) 
  (with_decorator 
  (builds "global") 
  (checkargs :min 1) 
  (defn compile_global_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv names []) 
  (while (> (len expr) 0) 
@@ -973,15 +880,11 @@
  (names.append name) 
  (when (not (isinstance identifier HySymbol)) 
  (raise (HyTypeError identifier "(global) arguments must  be Symbols")))) 
- (raise (Py2HyReturnException (ast.Global :names names :lineno expr.start_line :col_offset expr.start_column)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (ast.Global :names names :lineno expr.start_line :col_offset expr.start_column))) 
  (with_decorator 
  (builds "nonlocal") 
  (checkargs :min 1) 
  (defn compile_nonlocal_expression [self expr] 
- (try 
- (do 
  (when (not PY3) 
  (raise (HyCompileError "nonlocal only supported in python 3!"))) 
  (expr.pop 0) 
@@ -992,55 +895,39 @@
  (names.append name) 
  (when (not (isinstance identifier HySymbol)) 
  (raise (HyTypeError identifier "(nonlocal) arguments must be Symbols.")))) 
- (raise (Py2HyReturnException (ast.Nonlocal :names names :lineno expr.start_line :col_offset expr.start_column)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (ast.Nonlocal :names names :lineno expr.start_line :col_offset expr.start_column))) 
  (with_decorator 
  (builds "yield") 
  (checkargs :max 1) 
  (defn compile_yield_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv ret (Result :contains_yield (not PY3))) 
  (setv value None) 
  (when (!= expr []) 
- (setv ret (+ ret (self.compile (expr.pop 0)))) 
+ (+= ret (self.compile (expr.pop 0))) 
  (setv value ret.force_expr)) 
- (setv ret (+ ret (ast.Yield :value value :lineno expr.start_line :col_offset expr.start_column))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (ast.Yield :value value :lineno expr.start_line :col_offset expr.start_column)) 
+ ret)) 
  (with_decorator 
  (builds_if "yield_from" PY3) 
  (checkargs :max 1) 
  (defn compile_yield_from_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv ret (Result :contains_yield True)) 
  (setv value None) 
  (when (!= expr []) 
- (setv ret (+ ret (self.compile (expr.pop 0)))) 
+ (+= ret (self.compile (expr.pop 0))) 
  (setv value ret.force_expr)) 
- (setv ret (+ ret (ast.YieldFrom :value value :lineno expr.start_line :col_offset expr.start_column))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (ast.YieldFrom :value value :lineno expr.start_line :col_offset expr.start_column)) 
+ ret)) 
  (with_decorator 
  (builds "import") 
  (defn compile_import_expression [self expr] 
- (try 
- (do 
  (defn _compile_import [expr module &optional [names None] [importer ast.Import]] 
- (try 
- (do 
  (when (not names) 
  (setv names [(ast.alias :name (ast_str module) :asname None)])) 
  (setv ret (importer :lineno expr.start_line :col_offset expr.start_column :module (ast_str module) :names names :level 0)) 
- (raise (Py2HyReturnException (+ (Result) ret)))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (+ (Result) ret)) 
  (expr.pop 0) 
  (setv rimports (Result)) 
  (while (> (len expr) 0) 
@@ -1048,10 +935,10 @@
  (when (not (isinstance iexpr (, HySymbol HyList))) 
  (raise (HyTypeError iexpr "(import) requires a Symbol or a List."))) 
  (when (isinstance iexpr HySymbol) 
- (setv rimports (+ rimports (_compile_import expr iexpr))) 
+ (+= rimports (_compile_import expr iexpr)) 
  (continue)) 
  (when (and (isinstance iexpr HyList) (= (len iexpr) 1)) 
- (setv rimports (+ rimports (_compile_import expr (iexpr.pop 0)))) 
+ (+= rimports (_compile_import expr (iexpr.pop 0))) 
  (continue)) 
  (when (and (isinstance iexpr HyList) iexpr) 
  (setv module (iexpr.pop 0)) 
@@ -1062,7 +949,7 @@
  (iexpr.pop 0) 
  (setv alias (iexpr.pop 0)) 
  (setv names [(ast.alias :name (ast_str module) :asname (ast_str alias))]) 
- (setv rimports (+ rimports (_compile_import expr (ast_str module) names))) 
+ (+= rimports (_compile_import expr (ast_str module) names)) 
  (continue)) 
  (when (isinstance entry HyList) 
  (setv names []) 
@@ -1075,55 +962,44 @@
  (do 
  (setv alias None))) 
  (names.append (ast.alias :name (ast_str sym) :asname alias))) 
- (setv rimports (+ rimports (_compile_import expr module names ast.ImportFrom))) 
+ (+= rimports (_compile_import expr module names ast.ImportFrom)) 
  (continue)) 
  (raise (HyTypeError entry (% "Unknown entry (`%s`) in the HyList" entry))))) 
- (raise (Py2HyReturnException rimports))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ rimports)) 
  (with_decorator 
  (builds "get") 
  (checkargs :min 2) 
  (defn compile_index_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv val (self.compile (expr.pop 0))) 
  (do 
- (setv _py2hy_anon_var_G_1244 (self._compile_collect expr)) 
- (setv slices (nth _py2hy_anon_var_G_1244 0)) 
- (setv ret (nth _py2hy_anon_var_G_1244 1))) 
+ (setv _py2hy_anon_var_G_1340 (self._compile_collect expr)) 
+ (setv slices (nth _py2hy_anon_var_G_1340 0)) 
+ (setv ret (nth _py2hy_anon_var_G_1340 1))) 
  (when val.stmts 
- (setv ret (+ ret val))) 
+ (+= ret val)) 
  (for [sli slices] 
  (setv val (+ (Result) (ast.Subscript :lineno expr.start_line :col_offset expr.start_column :value val.force_expr :slice (ast.Index :value sli) :ctx (ast.Load))))) 
- (raise (Py2HyReturnException (+ ret val)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+ ret val))) 
  (with_decorator 
  (builds ".") 
  (checkargs :min 1) 
  (defn compile_attribute_access [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv ret (self.compile (expr.pop 0))) 
  (for [attr expr] 
- (if (isinstance attr HySymbol) 
- (do 
- (setv ret (+ ret (ast.Attribute :lineno attr.start_line :col_offset attr.start_column :value ret.force_expr :attr (ast_str attr) :ctx (ast.Load))))) 
- (do 
- (if (= (type attr) HyList) 
+ (cond 
+ [(isinstance attr HySymbol) 
+ (+= ret (ast.Attribute :lineno attr.start_line :col_offset attr.start_column :value ret.force_expr :attr (ast_str attr) :ctx (ast.Load)))] 
+ [(= (type attr) HyList) 
  (do 
  (when (!= (len attr) 1) 
  (raise (HyTypeError attr ((. "The attribute access DSL only accepts HySymbols and one-item lists, got {0}-item list instead" format) (len attr))))) 
  (setv compiled_attr (self.compile (attr.pop 0))) 
- (setv ret (+ (+ compiled_attr ret) (ast.Subscript :lineno attr.start_line :col_offset attr.start_column :value ret.force_expr :slice (ast.Index :value compiled_attr.force_expr) :ctx (ast.Load))))) 
- (do 
- (raise (HyTypeError attr ((. "The attribute access DSL only accepts HySymbols and one-item lists, got {0} instead" format) (. (type attr) __name__))))))))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (setv ret (+ (+ compiled_attr ret) (ast.Subscript :lineno attr.start_line :col_offset attr.start_column :value ret.force_expr :slice (ast.Index :value compiled_attr.force_expr) :ctx (ast.Load)))))] 
+ [True 
+ (raise (HyTypeError attr ((. "The attribute access DSL only accepts HySymbols and one-item lists, got {0} instead" format) (. (type attr) __name__))))])) 
+ ret)) 
  (with_decorator 
  (builds "del") 
  (defn compile_del_expression [self expr] 
@@ -1132,13 +1008,13 @@
  (setv root (expr.pop 0)) 
  (when (not expr) 
  (setv result (Result)) 
- (setv result (+ result (ast.Name :id "None" :ctx (ast.Load) :lineno root.start_line :col_offset root.start_column))) 
+ (+= result (ast.Name :id "None" :ctx (ast.Load) :lineno root.start_line :col_offset root.start_column)) 
  (raise (Py2HyReturnException result))) 
  (setv del_targets []) 
  (setv ret (Result)) 
  (for [target expr] 
  (setv compiled_target (self.compile target)) 
- (setv ret (+ ret compiled_target)) 
+ (+= ret compiled_target) 
  (del_targets.append (self._storeize target compiled_target ast.Del))) 
  (raise (Py2HyReturnException (+ ret (ast.Delete :lineno expr.start_line :col_offset expr.start_column :targets del_targets))))) 
  (except [e Py2HyReturnException] 
@@ -1147,8 +1023,6 @@
  (builds "cut") 
  (checkargs :min 1 :max 4) 
  (defn compile_cut_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv val (self.compile (expr.pop 0))) 
  (setv low (Result)) 
@@ -1160,48 +1034,36 @@
  (setv step (Result)) 
  (when (!= expr []) 
  (setv step (self.compile (expr.pop 0)))) 
- (raise (Py2HyReturnException (+ (+ (+ (+ val low) high) step) (ast.Subscript :lineno expr.start_line :col_offset expr.start_column :value val.force_expr :slice (ast.Slice :lower low.expr :upper high.expr :step step.expr) :ctx (ast.Load)))))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+ (+ (+ (+ val low) high) step) (ast.Subscript :lineno expr.start_line :col_offset expr.start_column :value val.force_expr :slice (ast.Slice :lower low.expr :upper high.expr :step step.expr) :ctx (ast.Load))))) 
  (with_decorator 
  (builds "assoc") 
  (checkargs :min 3 :even False) 
  (defn compile_assoc_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv target (self.compile (expr.pop 0))) 
  (setv ret target) 
  (setv i (iter expr)) 
  (for [[key val] (genexpr (, (self.compile x) (self.compile y)) [[x y] (zip i i)])] 
- (setv ret (+ ret (+ (+ key val) (ast.Assign :lineno expr.start_line :col_offset expr.start_column :targets [(ast.Subscript :lineno expr.start_line :col_offset expr.start_column :value target.force_expr :slice (ast.Index :value key.force_expr) :ctx (ast.Store))] :value val.force_expr))))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (+ (+ key val) (ast.Assign :lineno expr.start_line :col_offset expr.start_column :targets [(ast.Subscript :lineno expr.start_line :col_offset expr.start_column :value target.force_expr :slice (ast.Index :value key.force_expr) :ctx (ast.Store))] :value val.force_expr)))) 
+ ret)) 
  (with_decorator 
  (builds "with_decorator") 
  (checkargs :min 1) 
  (defn compile_decorate_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv fn_py2hy_mangling (self.compile (expr.pop (- 1)))) 
  (when (or (not fn_py2hy_mangling.stmts) (not (isinstance (get fn_py2hy_mangling.stmts (- 1)) (, ast.FunctionDef ast.ClassDef)))) 
  (raise (HyTypeError expr "Decorated a non-function"))) 
  (do 
- (setv _py2hy_anon_var_G_1245 (self._compile_collect expr)) 
- (setv decorators (nth _py2hy_anon_var_G_1245 0)) 
- (setv ret (nth _py2hy_anon_var_G_1245 1))) 
+ (setv _py2hy_anon_var_G_1342 (self._compile_collect expr)) 
+ (setv decorators (nth _py2hy_anon_var_G_1342 0)) 
+ (setv ret (nth _py2hy_anon_var_G_1342 1))) 
  (setv (. (get fn_py2hy_mangling.stmts (- 1)) decorator_list) (+ decorators (. (get fn_py2hy_mangling.stmts (- 1)) decorator_list))) 
- (raise (Py2HyReturnException (+ ret fn_py2hy_mangling)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+ ret fn_py2hy_mangling))) 
  (with_decorator 
  (builds "with*") 
  (checkargs :min 2) 
  (defn compile_with_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv args (expr.pop 0)) 
  (when (not (isinstance args HyList)) 
@@ -1216,38 +1078,30 @@
  (setv body (self._compile_branch expr)) 
  (setv var (self.get_anon_var)) 
  (setv name (ast.Name :id (ast_str var) :arg (ast_str var) :ctx (ast.Store) :lineno expr.start_line :col_offset expr.start_column)) 
- (setv body (+ body (ast.Assign :targets [name] :value body.force_expr :lineno expr.start_line :col_offset expr.start_column))) 
+ (+= body (ast.Assign :targets [name] :value body.force_expr :lineno expr.start_line :col_offset expr.start_column)) 
  (setv the_with (ast.With :context_expr ctx.force_expr :lineno expr.start_line :col_offset expr.start_column :optional_vars thing :body body.stmts)) 
  (when PY3 
  (setv the_with.items [(ast.withitem :context_expr ctx.force_expr :optional_vars thing)])) 
  (setv ret (+ ctx the_with)) 
  (setv ret.contains_yield (or ret.contains_yield body.contains_yield)) 
  (setv expr_name (ast.Name :id (ast_str var) :arg (ast_str var) :ctx (ast.Load) :lineno expr.start_line :col_offset expr.start_column)) 
- (setv ret (+ ret (Result :expr expr_name :temp_variables [expr_name name]))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (Result :expr expr_name :temp_variables [expr_name name])) 
+ ret)) 
  (with_decorator 
  (builds ",") 
  (defn compile_tuple [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (do 
- (setv _py2hy_anon_var_G_1246 (self._compile_collect expr)) 
- (setv elts (nth _py2hy_anon_var_G_1246 0)) 
- (setv ret (nth _py2hy_anon_var_G_1246 1))) 
- (setv ret (+ ret (ast.Tuple :elts elts :lineno expr.start_line :col_offset expr.start_column :ctx (ast.Load)))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (setv _py2hy_anon_var_G_1344 (self._compile_collect expr)) 
+ (setv elts (nth _py2hy_anon_var_G_1344 0)) 
+ (setv ret (nth _py2hy_anon_var_G_1344 1))) 
+ (+= ret (ast.Tuple :elts elts :lineno expr.start_line :col_offset expr.start_column :ctx (ast.Load))) 
+ ret)) 
  (defn _compile_generator_iterables [self trailers] 
  "Helper to compile the \"trailing\" parts of comprehensions:
         generators and conditions" 
- (try 
- (do 
  (setv generators (trailers.pop 0)) 
- (setv cond (if (!= trailers []) 
+ (setv cond_py2hy_mangling (if (!= trailers []) 
  (self.compile (trailers.pop 0)) 
  (Result))) 
  (setv gen_it (iter generators)) 
@@ -1257,93 +1111,71 @@
  (for [[target iterable] paired_gens] 
  (setv comp_target (self.compile target)) 
  (setv target (self._storeize target comp_target)) 
- (setv gen_res (+ gen_res (self.compile iterable))) 
+ (+= gen_res (self.compile iterable)) 
  (gen.append (ast.comprehension :target target :iter gen_res.force_expr :ifs [] :is_async False))) 
- (when cond.expr 
- ((. (. (get gen (- 1)) ifs) append) cond.expr)) 
- (raise (Py2HyReturnException (, (+ gen_res cond) gen)))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (when cond_py2hy_mangling.expr 
+ ((. (. (get gen (- 1)) ifs) append) cond_py2hy_mangling.expr)) 
+ (, (+ gen_res cond_py2hy_mangling) gen)) 
  (with_decorator 
  (builds "list_comp") 
  (checkargs :min 2 :max 3) 
  (defn compile_list_comprehension [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv expression (expr.pop 0)) 
  (setv gen_gen (get expr 0)) 
  (when (not (isinstance gen_gen HyList)) 
  (raise (HyTypeError gen_gen "Generator expression must be a list."))) 
  (do 
- (setv _py2hy_anon_var_G_1247 (self._compile_generator_iterables expr)) 
- (setv gen_res (nth _py2hy_anon_var_G_1247 0)) 
- (setv gen (nth _py2hy_anon_var_G_1247 1))) 
+ (setv _py2hy_anon_var_G_1346 (self._compile_generator_iterables expr)) 
+ (setv gen_res (nth _py2hy_anon_var_G_1346 0)) 
+ (setv gen (nth _py2hy_anon_var_G_1346 1))) 
  (when (= (len gen) 0) 
  (raise (HyTypeError gen_gen "Generator expression cannot be empty."))) 
  (setv compiled_expression (self.compile expression)) 
  (setv ret (+ compiled_expression gen_res)) 
- (setv ret (+ ret (ast.ListComp :lineno expr.start_line :col_offset expr.start_column :elt compiled_expression.force_expr :generators gen))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (ast.ListComp :lineno expr.start_line :col_offset expr.start_column :elt compiled_expression.force_expr :generators gen)) 
+ ret)) 
  (with_decorator 
  (builds "set_comp") 
  (checkargs :min 2 :max 3) 
  (defn compile_set_comprehension [self expr] 
- (try 
- (do 
  (setv ret (self.compile_list_comprehension expr)) 
  (setv expr ret.expr) 
  (setv ret.expr (ast.SetComp :lineno expr.lineno :col_offset expr.col_offset :elt expr.elt :generators expr.generators)) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ ret)) 
  (with_decorator 
  (builds "dict_comp") 
  (checkargs :min 3 :max 4) 
  (defn compile_dict_comprehension [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv key (expr.pop 0)) 
  (setv value (expr.pop 0)) 
  (do 
- (setv _py2hy_anon_var_G_1248 (self._compile_generator_iterables expr)) 
- (setv gen_res (nth _py2hy_anon_var_G_1248 0)) 
- (setv gen (nth _py2hy_anon_var_G_1248 1))) 
+ (setv _py2hy_anon_var_G_1348 (self._compile_generator_iterables expr)) 
+ (setv gen_res (nth _py2hy_anon_var_G_1348 0)) 
+ (setv gen (nth _py2hy_anon_var_G_1348 1))) 
  (setv compiled_key (self.compile key)) 
  (setv compiled_value (self.compile value)) 
  (setv ret (+ (+ compiled_key compiled_value) gen_res)) 
- (setv ret (+ ret (ast.DictComp :lineno expr.start_line :col_offset expr.start_column :key compiled_key.force_expr :value compiled_value.force_expr :generators gen))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (ast.DictComp :lineno expr.start_line :col_offset expr.start_column :key compiled_key.force_expr :value compiled_value.force_expr :generators gen)) 
+ ret)) 
  (with_decorator 
  (builds "genexpr") 
  (defn compile_genexpr [self expr] 
- (try 
- (do 
  (setv ret (self.compile_list_comprehension expr)) 
  (setv expr ret.expr) 
  (setv ret.expr (ast.GeneratorExp :lineno expr.lineno :col_offset expr.col_offset :elt expr.elt :generators expr.generators)) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ ret)) 
  (with_decorator 
  (builds "not") 
  (builds "~") 
  (checkargs 1) 
  (defn compile_unary_operator [self expression] 
- (try 
- (do 
  (setv ops {"not" ast.Not "~" ast.Invert}) 
  (setv operator (expression.pop 0)) 
  (setv operand (self.compile (expression.pop 0))) 
- (setv operand (+ operand (ast.UnaryOp :op ((get ops operator)) :operand operand.expr :lineno operator.start_line :col_offset operator.start_column))) 
- (raise (Py2HyReturnException operand))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= operand (ast.UnaryOp :op ((get ops operator)) :operand operand.expr :lineno operator.start_line :col_offset operator.start_column)) 
+ operand)) 
  (with_decorator 
  (builds "require") 
  (defn compile_require [self expression] 
@@ -1352,20 +1184,18 @@
         \"unimport\" it after we've completed `thing' so that we don't pollute
         other envs.
         " 
- (try 
- (do 
  (for [entry (get expression (slice 1 None None))] 
- (if (isinstance entry HySymbol) 
+ (cond 
+ [(isinstance entry HySymbol) 
  (do 
  (__import__ entry) 
- (hyhy.macros.require_hyhy entry self.module_name :all_macros True :prefix entry)) 
+ (hyhy.macros.require_hyhy entry self.module_name :all_macros True :prefix entry))] 
+ [(and (isinstance entry HyList) (= (len entry) 2)) 
  (do 
- (if (and (isinstance entry HyList) (= (len entry) 2)) 
  (do 
- (do 
- (setv _py2hy_anon_var_G_1250 entry) 
- (setv module (nth _py2hy_anon_var_G_1250 0)) 
- (setv names (nth _py2hy_anon_var_G_1250 1))) 
+ (setv _py2hy_anon_var_G_1372 entry) 
+ (setv module (nth _py2hy_anon_var_G_1372 0)) 
+ (setv names (nth _py2hy_anon_var_G_1372 1))) 
  (when (not (isinstance names HyList)) 
  (raise (HyTypeError names "(require) name lists should be HyLists"))) 
  (__import__ module) 
@@ -1380,29 +1210,27 @@
  (if (and (> (len names) 1) (= (get names 1) (HyKeyword ":as"))) 
  (do 
  (do 
- (setv _py2hy_anon_var_G_1251 (get names (slice None 3 None))) 
- (setv k (nth _py2hy_anon_var_G_1251 0)) 
- (setv v (nth _py2hy_anon_var_G_1251 2))) 
+ (setv _py2hy_anon_var_G_1374 (get names (slice None 3 None))) 
+ (setv k (nth _py2hy_anon_var_G_1374 0)) 
+ (setv v (nth _py2hy_anon_var_G_1374 2))) 
  (del (get names (slice None 3 None))) 
  (assoc assignments k v)) 
  (do 
  (setv symbol (names.pop 0)) 
  (assoc assignments symbol symbol)))) 
- (hyhy.macros.require_hyhy module self.module_name :assignments assignments)))) 
- (do 
+ (hyhy.macros.require_hyhy module self.module_name :assignments assignments))))] 
+ [True 
  (if (and (isinstance entry HyList) (= (len entry) 3) (= (get entry 1) (HyKeyword ":as"))) 
  (do 
  (do 
- (setv _py2hy_anon_var_G_1249 entry) 
- (setv module (nth _py2hy_anon_var_G_1249 0)) 
- (setv prefix (nth _py2hy_anon_var_G_1249 2))) 
+ (setv _py2hy_anon_var_G_1376 entry) 
+ (setv module (nth _py2hy_anon_var_G_1376 0)) 
+ (setv prefix (nth _py2hy_anon_var_G_1376 2))) 
  (__import__ module) 
  (hyhy.macros.require_hyhy module self.module_name :all_macros True :prefix prefix)) 
  (do 
- (raise (HyTypeError entry "unrecognized (require) syntax"))))))))) 
- (raise (Py2HyReturnException (Result)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (raise (HyTypeError entry "unrecognized (require) syntax"))))])) 
+ (Result))) 
  (with_decorator 
  (builds "and") 
  (builds "or") 
@@ -1412,19 +1240,20 @@
  (setv ops {"and" (, ast.And "True") "or" (, ast.Or "None")}) 
  (setv operator (expression.pop 0)) 
  (do 
- (setv _py2hy_anon_var_G_1252 (get ops operator)) 
- (setv opnode (nth _py2hy_anon_var_G_1252 0)) 
- (setv default (nth _py2hy_anon_var_G_1252 1))) 
+ (setv _py2hy_anon_var_G_1377 (get ops operator)) 
+ (setv opnode (nth _py2hy_anon_var_G_1377 0)) 
+ (setv default (nth _py2hy_anon_var_G_1377 1))) 
  (do 
- (setv _py2hy_anon_var_G_1253 (, operator.start_line operator.start_column)) 
- (setv root_line (nth _py2hy_anon_var_G_1253 0)) 
- (setv root_column (nth _py2hy_anon_var_G_1253 1))) 
- (if (= (len expression) 0) 
- (do 
- (raise (Py2HyReturnException (ast.Name :id default :ctx (ast.Load) :lineno root_line :col_offset root_column)))) 
- (do 
- (when (= (len expression) 1) 
- (raise (Py2HyReturnException (self.compile (get expression 0))))))) 
+ (setv _py2hy_anon_var_G_1378 (, operator.start_line operator.start_column)) 
+ (setv root_line (nth _py2hy_anon_var_G_1378 0)) 
+ (setv root_column (nth _py2hy_anon_var_G_1378 1))) 
+ (cond 
+ [(= (len expression) 0) 
+ (raise (Py2HyReturnException (ast.Name :id default :ctx (ast.Load) :lineno root_line :col_offset root_column)))] 
+ [(= (len expression) 1) 
+ (raise (Py2HyReturnException (self.compile (get expression 0))))] 
+ [True 
+ (do)]) 
  (setv ret (Result)) 
  (setv values (list (map self.compile expression))) 
  (setv has_stmt (any (genexpr value.stmts [value values]))) 
@@ -1435,24 +1264,20 @@
  (setv expr_name (ast.Name :id var :ctx (ast.Load) :lineno root_line :col_offset root_column)) 
  (setv temp_variables [name expr_name]) 
  (defn make_assign [value &optional [node None]] 
- (try 
- (do 
  (if (is node None) 
  (do 
  (do 
- (setv _py2hy_anon_var_G_1255 (, root_line root_column)) 
- (setv line (nth _py2hy_anon_var_G_1255 0)) 
- (setv column (nth _py2hy_anon_var_G_1255 1)))) 
+ (setv _py2hy_anon_var_G_1390 (, root_line root_column)) 
+ (setv line (nth _py2hy_anon_var_G_1390 0)) 
+ (setv column (nth _py2hy_anon_var_G_1390 1)))) 
  (do 
  (do 
- (setv _py2hy_anon_var_G_1254 (, node.lineno node.col_offset)) 
- (setv line (nth _py2hy_anon_var_G_1254 0)) 
- (setv column (nth _py2hy_anon_var_G_1254 1))))) 
+ (setv _py2hy_anon_var_G_1388 (, node.lineno node.col_offset)) 
+ (setv line (nth _py2hy_anon_var_G_1388 0)) 
+ (setv column (nth _py2hy_anon_var_G_1388 1))))) 
  (setv positioned_name (ast.Name :id var :ctx (ast.Store) :lineno line :col_offset column)) 
  (temp_variables.append positioned_name) 
- (raise (Py2HyReturnException (ast.Assign :targets [positioned_name] :value value :lineno line :col_offset column)))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (ast.Assign :targets [positioned_name] :value value :lineno line :col_offset column)) 
  (setv root []) 
  (setv current root) 
  (for [[i value] (enumerate values)] 
@@ -1465,36 +1290,33 @@
  (current.append (make_assign value.force_expr value.force_expr)) 
  (when (= i (- (len values) 1)) 
  (break)) 
- (if (= operator "and") 
- (do 
- (setv cond expr_name)) 
- (do 
- (when (= operator "or") 
- (setv cond (ast.UnaryOp :op (ast.Not) :operand expr_name :lineno node.lineno :col_offset node.col_offset))))) 
- (current.append (ast.If :test cond :body [] :lineno node.lineno :col_offset node.col_offset :orelse [])) 
+ (cond 
+ [(= operator "and") 
+ (setv cond_py2hy_mangling expr_name)] 
+ [(= operator "or") 
+ (setv cond_py2hy_mangling (ast.UnaryOp :op (ast.Not) :operand expr_name :lineno node.lineno :col_offset node.col_offset))] 
+ [True 
+ (do)]) 
+ (current.append (ast.If :test cond_py2hy_mangling :body [] :lineno node.lineno :col_offset node.col_offset :orelse [])) 
  (setv current (. (get current (- 1)) body))) 
  (setv ret (sum root ret)) 
- (setv ret (+ ret (Result :expr expr_name :temp_variables temp_variables)))) 
+ (+= ret (Result :expr expr_name :temp_variables temp_variables))) 
  (do 
- (setv ret (+ ret (ast.BoolOp :op (opnode) :lineno root_line :col_offset root_column :values (list_comp value.force_expr [value values])))))) 
+ (+= ret (ast.BoolOp :op (opnode) :lineno root_line :col_offset root_column :values (list_comp value.force_expr [value values]))))) 
  (raise (Py2HyReturnException ret))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))) 
  (defn _compile_compare_op_expression [self expression] 
- (try 
- (do 
  (setv ops {"=" ast.Eq "!=" ast.NotEq "<" ast.Lt "<=" ast.LtE ">" ast.Gt ">=" ast.GtE "is" ast.Is "is_not" ast.IsNot "in" ast.In "not_in" ast.NotIn}) 
  (setv inv (expression.pop 0)) 
  (setv op (get ops inv)) 
  (setv ops (list_comp (op) [x (range 1 (len expression))])) 
  (setv e (get expression 0)) 
  (do 
- (setv _py2hy_anon_var_G_1256 (self._compile_collect expression)) 
- (setv exprs (nth _py2hy_anon_var_G_1256 0)) 
- (setv ret (nth _py2hy_anon_var_G_1256 1))) 
- (raise (Py2HyReturnException (+ ret (ast.Compare :left (get exprs 0) :ops ops :comparators (get exprs (slice 1 None None)) :lineno e.start_line :col_offset e.start_column))))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (setv _py2hy_anon_var_G_1392 (self._compile_collect expression)) 
+ (setv exprs (nth _py2hy_anon_var_G_1392 0)) 
+ (setv ret (nth _py2hy_anon_var_G_1392 1))) 
+ (+ ret (ast.Compare :left (get exprs 0) :ops ops :comparators (get exprs (slice 1 None None)) :lineno e.start_line :col_offset e.start_column))) 
  (with_decorator 
  (builds "=") 
  (builds "is") 
@@ -1516,47 +1338,37 @@
  (builds "is_not") 
  (checkargs :min 2) 
  (defn compile_compare_op_expression_coll [self expression] 
- (try 
- [(raise (Py2HyReturnException (self._compile_compare_op_expression expression)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self._compile_compare_op_expression expression))) 
  (with_decorator 
  (builds "in") 
  (builds "not_in") 
  (checkargs 2) 
  (defn compile_compare_op_expression_binary [self expression] 
- (try 
- [(raise (Py2HyReturnException (self._compile_compare_op_expression expression)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self._compile_compare_op_expression expression))) 
  (defn _compile_maths_expression [self expression] 
- (try 
- (do 
  (setv ops {"+" ast.Add "/" ast.Div "//" ast.FloorDiv "*" ast.Mult "-" ast.Sub "%" ast.Mod "**" ast.Pow "<<" ast.LShift ">>" ast.RShift "|" ast.BitOr "^" ast.BitXor "&" ast.BitAnd}) 
  (when PY35 
  (ops.update {"@" ast.MatMult})) 
  (setv op (get ops (expression.pop 0))) 
  (setv right_associative (= op ast.Pow)) 
  (do 
- (setv _py2hy_anon_var_G_1257 (, expression.start_line expression.start_column)) 
- (setv lineno (nth _py2hy_anon_var_G_1257 0)) 
- (setv col_offset (nth _py2hy_anon_var_G_1257 1))) 
+ (setv _py2hy_anon_var_G_1396 (, expression.start_line expression.start_column)) 
+ (setv lineno (nth _py2hy_anon_var_G_1396 0)) 
+ (setv col_offset (nth _py2hy_anon_var_G_1396 1))) 
  (when right_associative 
  (setv expression (get expression (slice None None (- 1))))) 
  (setv ret (self.compile (expression.pop 0))) 
  (for [child expression] 
  (setv left_expr ret.force_expr) 
- (setv ret (+ ret (self.compile child))) 
+ (+= ret (self.compile child)) 
  (setv right_expr ret.force_expr) 
  (when right_associative 
  (do 
- (setv _py2hy_anon_var_G_1258 (, right_expr left_expr)) 
- (setv left_expr (nth _py2hy_anon_var_G_1258 0)) 
- (setv right_expr (nth _py2hy_anon_var_G_1258 1)))) 
- (setv ret (+ ret (ast.BinOp :left left_expr :op (op) :right right_expr :lineno lineno :col_offset col_offset)))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (setv _py2hy_anon_var_G_1398 (, right_expr left_expr)) 
+ (setv left_expr (nth _py2hy_anon_var_G_1398 0)) 
+ (setv right_expr (nth _py2hy_anon_var_G_1398 1)))) 
+ (+= ret (ast.BinOp :left left_expr :op (op) :right right_expr :lineno lineno :col_offset col_offset))) 
+ ret) 
  (with_decorator 
  (builds "**") 
  (builds "//") 
@@ -1565,19 +1377,13 @@
  (builds "&") 
  (checkargs :min 2) 
  (defn compile_maths_expression_2_or_more [self expression] 
- (try 
- [(raise (Py2HyReturnException (self._compile_maths_expression expression)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self._compile_maths_expression expression))) 
  (with_decorator 
  (builds "%") 
  (builds "^") 
  (checkargs 2) 
  (defn compile_maths_expression_exactly_2 [self expression] 
- (try 
- [(raise (Py2HyReturnException (self._compile_maths_expression expression)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self._compile_maths_expression expression))) 
  (with_decorator 
  (builds "*") 
  (builds "|") 
@@ -1585,31 +1391,33 @@
  (try 
  (do 
  (setv id_elem (get {"*" 1 "|" 0} (get expression 0))) 
- (if (= (len expression) 1) 
- (do 
- (raise (Py2HyReturnException (ast.Num :n (long_type id_elem) :lineno expression.start_line :col_offset expression.start_column)))) 
- (do 
- (if (= (len expression) 2) 
- (do 
- (raise (Py2HyReturnException (self.compile (get expression 1))))) 
- (do 
- (raise (Py2HyReturnException (self._compile_maths_expression expression)))))))) 
+ (cond 
+ [(= (len expression) 1) 
+ (raise (Py2HyReturnException (ast.Num :n (long_type id_elem) :lineno expression.start_line :col_offset expression.start_column)))] 
+ [(= (len expression) 2) 
+ (raise (Py2HyReturnException (self.compile (get expression 1))))] 
+ [True 
+ (raise (Py2HyReturnException (self._compile_maths_expression expression)))])) 
  (except [e Py2HyReturnException] 
  e.retvalue)))) 
  (with_decorator 
  (builds "/") 
  (checkargs :min 1) 
  (defn compile_maths_expression_div [self expression] 
- (try 
- (do 
  (when (= (len expression) 2) 
  (setv expression ((. (HyExpression [(HySymbol "/") (HyInteger 1) (get expression 1)]) replace) expression))) 
- (raise (Py2HyReturnException (self._compile_maths_expression expression)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self._compile_maths_expression expression))) 
  (defn _compile_maths_expression_additive [self expression] 
  (try 
- [(if (> (len expression) 2) (do (raise (Py2HyReturnException (self._compile_maths_expression expression)))) (do (setv op ((get {"+" ast.UAdd "-" ast.USub} (expression.pop 0)))) (setv arg (expression.pop 0)) (setv ret (self.compile arg)) (setv ret (+ ret (ast.UnaryOp :op op :operand ret.force_expr :lineno arg.start_line :col_offset arg.start_column))) (raise (Py2HyReturnException ret))))] 
+ (if (> (len expression) 2) 
+ (do 
+ (raise (Py2HyReturnException (self._compile_maths_expression expression)))) 
+ (do 
+ (setv op ((get {"+" ast.UAdd "-" ast.USub} (expression.pop 0)))) 
+ (setv arg (expression.pop 0)) 
+ (setv ret (self.compile arg)) 
+ (+= ret (ast.UnaryOp :op op :operand ret.force_expr :lineno arg.start_line :col_offset arg.start_column)) 
+ (raise (Py2HyReturnException ret)))) 
  (except [e Py2HyReturnException] 
  e.retvalue))) 
  (with_decorator 
@@ -1618,24 +1426,29 @@
  (checkargs :min 1) 
  (defn compile_maths_expression_unary_idempotent [self expression] 
  (try 
- [(if (= (len expression) 2) (do (raise (Py2HyReturnException (self.compile (get expression 1))))) (do (raise (Py2HyReturnException (self._compile_maths_expression expression)))))] 
+ (if (= (len expression) 2) 
+ (do 
+ (raise (Py2HyReturnException (self.compile (get expression 1))))) 
+ (do 
+ (raise (Py2HyReturnException (self._compile_maths_expression expression))))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))) 
  (with_decorator 
  (builds "+") 
  (defn compile_maths_expression_add [self expression] 
  (try 
- [(if (= (len expression) 1) (do (raise (Py2HyReturnException (ast.Num :n (long_type 0) :lineno expression.start_line :col_offset expression.start_column)))) (do (raise (Py2HyReturnException (self._compile_maths_expression_additive expression)))))] 
+ (if (= (len expression) 1) 
+ (do 
+ (raise (Py2HyReturnException (ast.Num :n (long_type 0) :lineno expression.start_line :col_offset expression.start_column)))) 
+ (do 
+ (raise (Py2HyReturnException (self._compile_maths_expression_additive expression))))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))) 
  (with_decorator 
  (builds "-") 
  (checkargs :min 1) 
  (defn compile_maths_expression_sub [self expression] 
- (try 
- [(raise (Py2HyReturnException (self._compile_maths_expression_additive expression)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self._compile_maths_expression_additive expression))) 
  (with_decorator 
  (builds "+=") 
  (builds "/=") 
@@ -1652,28 +1465,20 @@
  (builds_if "@=" PY35) 
  (checkargs 2) 
  (defn compile_augassign_expression [self expression] 
- (try 
- (do 
  (setv ops {"+=" ast.Add "/=" ast.Div "//=" ast.FloorDiv "*=" ast.Mult "_=" ast.Sub "%=" ast.Mod "**=" ast.Pow "<<=" ast.LShift ">>=" ast.RShift "|=" ast.BitOr "^=" ast.BitXor "&=" ast.BitAnd}) 
  (when PY35 
  (ops.update {"@=" ast.MatMult})) 
  (setv op (get ops (get expression 0))) 
  (setv target (self._storeize (get expression 1) (self.compile (get expression 1)))) 
  (setv ret (self.compile (get expression 2))) 
- (setv ret (+ ret (ast.AugAssign :target target :value ret.force_expr :op (op) :lineno expression.start_line :col_offset expression.start_column))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= ret (ast.AugAssign :target target :value ret.force_expr :op (op) :lineno expression.start_line :col_offset expression.start_column)) 
+ ret)) 
  (with_decorator 
  (checkargs 1) 
  (defn _compile_keyword_call [self expression] 
- (try 
- (do 
  (expression.append (expression.pop 0)) 
  (expression.insert 0 (HySymbol "get")) 
- (raise (Py2HyReturnException (self.compile expression)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self.compile expression))) 
  (with_decorator 
  (builds HyExpression) 
  (defn compile_expression [self expression] 
@@ -1701,12 +1506,12 @@
  (while (< i (len expression)) 
  (if (isinstance (get expression i) HyKeyword) 
  (do 
- (setv i (+ i 1))) 
+ (+= i 1)) 
  (do 
  (break))) 
- (setv i (+ i 1)))) 
+ (+= i 1))) 
  (setv func (self.compile (HyExpression (+ [((. (HySymbol ".") replace) fn_py2hy_mangling) (expression.pop i)] attrs)))) 
- (setv func (+ func (ast.Attribute :lineno fn_py2hy_mangling.start_line :col_offset fn_py2hy_mangling.start_column :value func.force_expr :attr (ast_str fn_py2hy_mangling) :ctx (ast.Load)))))) 
+ (+= func (ast.Attribute :lineno fn_py2hy_mangling.start_line :col_offset fn_py2hy_mangling.start_column :value func.force_expr :attr (ast_str fn_py2hy_mangling) :ctx (ast.Load))))) 
  (when (not func) 
  (setv func (self.compile fn_py2hy_mangling))) 
  (if (in fn_py2hy_mangling (, "type" "HyKeyword" "keyword" "name" "is_keyword")) 
@@ -1715,13 +1520,13 @@
  (do 
  (setv with_kwargs True))) 
  (do 
- (setv _py2hy_anon_var_G_1259 (self._compile_collect (get expression (slice 1 None None)) with_kwargs :oldpy_unpack True)) 
- (setv args (nth _py2hy_anon_var_G_1259 0)) 
- (setv ret (nth _py2hy_anon_var_G_1259 1)) 
- (setv keywords (nth _py2hy_anon_var_G_1259 2)) 
- (setv oldpy_starargs (nth _py2hy_anon_var_G_1259 3)) 
- (setv oldpy_kwargs (nth _py2hy_anon_var_G_1259 4))) 
- (setv ret (+ ret (ast.Call :func func.expr :args args :keywords keywords :starargs oldpy_starargs :kwargs oldpy_kwargs :lineno expression.start_line :col_offset expression.start_column))) 
+ (setv _py2hy_anon_var_G_1399 (self._compile_collect (get expression (slice 1 None None)) with_kwargs :oldpy_unpack True)) 
+ (setv args (nth _py2hy_anon_var_G_1399 0)) 
+ (setv ret (nth _py2hy_anon_var_G_1399 1)) 
+ (setv keywords (nth _py2hy_anon_var_G_1399 2)) 
+ (setv oldpy_starargs (nth _py2hy_anon_var_G_1399 3)) 
+ (setv oldpy_kwargs (nth _py2hy_anon_var_G_1399 4))) 
+ (+= ret (ast.Call :func func.expr :args args :keywords keywords :starargs oldpy_starargs :kwargs oldpy_kwargs :lineno expression.start_line :col_offset expression.start_column)) 
  (raise (Py2HyReturnException (+ func ret)))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))) 
@@ -1732,29 +1537,26 @@
  (try 
  (do 
  (setv root (expression.pop 0)) 
- (if (not expression) 
+ (cond 
+ [(not expression) 
  (do 
  (setv result (Result)) 
- (setv result (+ result (ast.Name :id "None" :ctx (ast.Load) :lineno root.start_line :col_offset root.start_column))) 
- (raise (Py2HyReturnException result))) 
- (do 
- (if (= (len expression) 2) 
- (do 
- (raise (Py2HyReturnException (self._compile_assign (get expression 0) (get expression 1) expression.start_line expression.start_column)))) 
- (do 
+ (+= result (ast.Name :id "None" :ctx (ast.Load) :lineno root.start_line :col_offset root.start_column)) 
+ (raise (Py2HyReturnException result)))] 
+ [(= (len expression) 2) 
+ (raise (Py2HyReturnException (self._compile_assign (get expression 0) (get expression 1) expression.start_line expression.start_column)))] 
+ [True 
  (if (!= (% (len expression) 2) 0) 
  (do 
  (raise (HyTypeError expression ((. "`{}' needs an even number of arguments" format) root)))) 
  (do 
  (setv result (Result)) 
  (for [[tgt target] (zip (get expression (slice None None 2)) (get expression (slice 1 None 2)))] 
- (setv result (+ result (self._compile_assign tgt target tgt.start_line tgt.start_column)))) 
- (raise (Py2HyReturnException result))))))))) 
+ (+= result (self._compile_assign tgt target tgt.start_line tgt.start_column))) 
+ (raise (Py2HyReturnException result))))])) 
  (except [e Py2HyReturnException] 
  e.retvalue)))) 
  (defn _compile_assign [self name result start_line start_column] 
- (try 
- (do 
  (setv str_name (% "%s" name)) 
  (when (and (_is_hy_builtin str_name self.module_name) (not self.allow_builtins)) 
  (raise (HyTypeError name (% "Can't assign to a builtin: `%s'" str_name)))) 
@@ -1768,10 +1570,8 @@
  (setv result.expr None)) 
  (do 
  (setv st_name (self._storeize name ld_name)) 
- (setv result (+ result (ast.Assign :lineno start_line :col_offset start_column :targets [st_name] :value result.force_expr))))) 
- (raise (Py2HyReturnException result))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (+= result (ast.Assign :lineno start_line :col_offset start_column :targets [st_name] :value result.force_expr)))) 
+ result) 
  (with_decorator 
  (builds "for*") 
  (checkargs :min 1) 
@@ -1783,7 +1583,10 @@
  (when (not (isinstance args HyList)) 
  (raise (HyTypeError expression ((. "for expects a list, received `{0}'" format) (. (type args) __name__))))) 
  (try 
- [(do (setv _py2hy_anon_var_G_1260 args) (setv target_name (nth _py2hy_anon_var_G_1260 0)) (setv iterable (nth _py2hy_anon_var_G_1260 1)))] 
+ (do 
+ (setv _py2hy_anon_var_G_1400 args) 
+ (setv target_name (nth _py2hy_anon_var_G_1400 0)) 
+ (setv iterable (nth _py2hy_anon_var_G_1400 1))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [ValueError] 
@@ -1793,17 +1596,19 @@
  (setv orel (Result)) 
  (when (and expression (= (get (get expression (- 1)) 0) (HySymbol "else"))) 
  (setv else_expr (expression.pop)) 
- (if (> (len else_expr) 2) 
+ (cond 
+ [(> (len else_expr) 2) 
+ (raise (HyTypeError else_expr "`else' statement in `for' is too long"))] 
+ [(= (len else_expr) 2) 
  (do 
- (raise (HyTypeError else_expr "`else' statement in `for' is too long"))) 
- (do 
- (when (= (len else_expr) 2) 
- (setv orel (+ orel (self.compile (get else_expr 1)))) 
- (setv orel (+ orel (orel.expr_as_stmt))))))) 
- (setv ret (+ ret (self.compile iterable))) 
+ (+= orel (self.compile (get else_expr 1))) 
+ (+= orel (orel.expr_as_stmt)))] 
+ [True 
+ (do)])) 
+ (+= ret (self.compile iterable)) 
  (setv body (self._compile_branch expression)) 
- (setv body (+ body (body.expr_as_stmt))) 
- (setv ret (+ ret (ast.For :lineno expression.start_line :col_offset expression.start_column :target target :iter ret.force_expr :body body.stmts :orelse orel.stmts))) 
+ (+= body (body.expr_as_stmt)) 
+ (+= ret (ast.For :lineno expression.start_line :col_offset expression.start_column :target target :iter ret.force_expr :body body.stmts :orelse orel.stmts)) 
  (setv ret.contains_yield body.contains_yield) 
  (raise (Py2HyReturnException ret))) 
  (except [e Py2HyReturnException] 
@@ -1812,43 +1617,31 @@
  (builds "while") 
  (checkargs :min 2) 
  (defn compile_while_expression [self expr] 
- (try 
- (do 
  (expr.pop 0) 
  (setv ret (self.compile (expr.pop 0))) 
  (setv body (self._compile_branch expr)) 
- (setv body (+ body (body.expr_as_stmt))) 
- (setv ret (+ ret (ast.While :test ret.force_expr :body body.stmts :orelse [] :lineno expr.start_line :col_offset expr.start_column))) 
+ (+= body (body.expr_as_stmt)) 
+ (+= ret (ast.While :test ret.force_expr :body body.stmts :orelse [] :lineno expr.start_line :col_offset expr.start_column)) 
  (setv ret.contains_yield body.contains_yield) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ ret)) 
  (with_decorator 
  (builds HyList) 
  (defn compile_list [self expression] 
- (try 
  (do 
- (do 
- (setv _py2hy_anon_var_G_1261 (self._compile_collect expression)) 
- (setv elts (nth _py2hy_anon_var_G_1261 0)) 
- (setv ret (nth _py2hy_anon_var_G_1261 1))) 
- (setv ret (+ ret (ast.List :elts elts :ctx (ast.Load) :lineno expression.start_line :col_offset expression.start_column))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (setv _py2hy_anon_var_G_1402 (self._compile_collect expression)) 
+ (setv elts (nth _py2hy_anon_var_G_1402 0)) 
+ (setv ret (nth _py2hy_anon_var_G_1402 1))) 
+ (+= ret (ast.List :elts elts :ctx (ast.Load) :lineno expression.start_line :col_offset expression.start_column)) 
+ ret)) 
  (with_decorator 
  (builds HySet) 
  (defn compile_set [self expression] 
- (try 
  (do 
- (do 
- (setv _py2hy_anon_var_G_1262 (self._compile_collect expression)) 
- (setv elts (nth _py2hy_anon_var_G_1262 0)) 
- (setv ret (nth _py2hy_anon_var_G_1262 1))) 
- (setv ret (+ ret (ast.Set :elts elts :ctx (ast.Load) :lineno expression.start_line :col_offset expression.start_column))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (setv _py2hy_anon_var_G_1404 (self._compile_collect expression)) 
+ (setv elts (nth _py2hy_anon_var_G_1404 0)) 
+ (setv ret (nth _py2hy_anon_var_G_1404 1))) 
+ (+= ret (ast.Set :elts elts :ctx (ast.Load) :lineno expression.start_line :col_offset expression.start_column)) 
+ ret)) 
  (with_decorator 
  (builds "fn") 
  (builds "fn*") 
@@ -1861,22 +1654,22 @@
  (when (not (isinstance arglist HyList)) 
  (raise (HyTypeError expression "First argument to `fn' must be a list"))) 
  (do 
- (setv _py2hy_anon_var_G_1263 (self._parse_lambda_list arglist)) 
- (setv ret (nth _py2hy_anon_var_G_1263 0)) 
- (setv args (nth _py2hy_anon_var_G_1263 1)) 
- (setv defaults (nth _py2hy_anon_var_G_1263 2)) 
- (setv stararg (nth _py2hy_anon_var_G_1263 3)) 
- (setv kwonlyargs (nth _py2hy_anon_var_G_1263 4)) 
- (setv kwonlydefaults (nth _py2hy_anon_var_G_1263 5)) 
- (setv kwargs (nth _py2hy_anon_var_G_1263 6))) 
+ (setv _py2hy_anon_var_G_1405 (self._parse_lambda_list arglist)) 
+ (setv ret (nth _py2hy_anon_var_G_1405 0)) 
+ (setv args (nth _py2hy_anon_var_G_1405 1)) 
+ (setv defaults (nth _py2hy_anon_var_G_1405 2)) 
+ (setv stararg (nth _py2hy_anon_var_G_1405 3)) 
+ (setv kwonlyargs (nth _py2hy_anon_var_G_1405 4)) 
+ (setv kwonlydefaults (nth _py2hy_anon_var_G_1405 5)) 
+ (setv kwargs (nth _py2hy_anon_var_G_1405 6))) 
  (for [[i arg] (enumerate args)] 
  (when (isinstance arg HyList) 
  (when (not arg) 
  (raise (HyTypeError arglist "Cannot destruct empty list"))) 
  (do 
- (setv _py2hy_anon_var_G_1264 (HySymbol (self.get_anon_var))) 
- (assoc args i _py2hy_anon_var_G_1264) 
- (setv var _py2hy_anon_var_G_1264)) 
+ (setv _py2hy_anon_var_G_1407 (HySymbol (self.get_anon_var))) 
+ (assoc args i _py2hy_anon_var_G_1407) 
+ (setv var _py2hy_anon_var_G_1407)) 
  (setv expression (+ (HyExpression [(HyExpression [(HySymbol "setv") arg var])]) expression)) 
  (setv expression (expression.replace (get arg 0))))) 
  (if PY34 
@@ -1898,20 +1691,20 @@
  (setv args (ast.arguments :args args :vararg stararg :kwarg kwargs :kwonlyargs kwonlyargs :kw_defaults kwonlydefaults :defaults defaults)) 
  (setv body (self._compile_branch expression)) 
  (when (and (not force_functiondef) (not body.stmts)) 
- (setv ret (+ ret (ast.Lambda :lineno expression.start_line :col_offset expression.start_column :args args :body body.force_expr))) 
+ (+= ret (ast.Lambda :lineno expression.start_line :col_offset expression.start_column :args args :body body.force_expr)) 
  (raise (Py2HyReturnException ret))) 
  (when body.expr 
  (if (and body.contains_yield (not PY3)) 
  (do 
- (setv body (+ body (body.expr_as_stmt)))) 
+ (+= body (body.expr_as_stmt))) 
  (do 
- (setv body (+ body (ast.Return :value body.expr :lineno body.expr.lineno :col_offset body.expr.col_offset)))))) 
+ (+= body (ast.Return :value body.expr :lineno body.expr.lineno :col_offset body.expr.col_offset))))) 
  (when (not body.stmts) 
- (setv body (+ body (ast.Pass :lineno expression.start_line :col_offset expression.start_column)))) 
+ (+= body (ast.Pass :lineno expression.start_line :col_offset expression.start_column))) 
  (setv name (self.get_anon_fn)) 
- (setv ret (+ ret (ast.FunctionDef :name name :lineno expression.start_line :col_offset expression.start_column :args args :body body.stmts :decorator_list []))) 
+ (+= ret (ast.FunctionDef :name name :lineno expression.start_line :col_offset expression.start_column :args args :body body.stmts :decorator_list [])) 
  (setv ast_name (ast.Name :id name :arg name :ctx (ast.Load) :lineno expression.start_line :col_offset expression.start_column)) 
- (setv ret (+ ret (Result :expr ast_name :temp_variables [ast_name (get ret.stmts (- 1))]))) 
+ (+= ret (Result :expr ast_name :temp_variables [ast_name (get ret.stmts (- 1))])) 
  (raise (Py2HyReturnException ret))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))) 
@@ -1919,27 +1712,21 @@
  (builds "defclass") 
  (checkargs :min 1) 
  (defn compile_class_expression [self expressions] 
- (try 
- (do 
  (defn rewire_init [expr] 
- (try 
- (do 
  (setv new_args []) 
  (when (= (get expr 0) (HySymbol "setv")) 
  (setv pairs (get expr (slice 1 None None))) 
  (while (> (len pairs) 0) 
  (do 
- (setv _py2hy_anon_var_G_1265 (, (pairs.pop 0) (pairs.pop 0))) 
- (setv k (nth _py2hy_anon_var_G_1265 0)) 
- (setv v (nth _py2hy_anon_var_G_1265 1))) 
+ (setv _py2hy_anon_var_G_1417 (, (pairs.pop 0) (pairs.pop 0))) 
+ (setv k (nth _py2hy_anon_var_G_1417 0)) 
+ (setv v (nth _py2hy_anon_var_G_1417 1))) 
  (when (= k (HySymbol "__init__")) 
  (v.append (HySymbol "None"))) 
  (new_args.append k) 
  (new_args.append v)) 
  (setv expr ((. (HyExpression (+ [(HySymbol "setv")] new_args)) replace) expr))) 
- (raise (Py2HyReturnException expr))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ expr) 
  (expressions.pop 0) 
  (setv class_name (expressions.pop 0)) 
  (if expressions 
@@ -1948,9 +1735,9 @@
  (when (not (isinstance base_list HyList)) 
  (raise (HyTypeError expressions "Bases class must be a list"))) 
  (do 
- (setv _py2hy_anon_var_G_1266 (self._compile_collect base_list)) 
- (setv bases_expr (nth _py2hy_anon_var_G_1266 0)) 
- (setv bases (nth _py2hy_anon_var_G_1266 1)))) 
+ (setv _py2hy_anon_var_G_1419 (self._compile_collect base_list)) 
+ (setv bases_expr (nth _py2hy_anon_var_G_1419 0)) 
+ (setv bases (nth _py2hy_anon_var_G_1419 1)))) 
  (do 
  (setv bases_expr []) 
  (setv bases (Result)))) 
@@ -1960,41 +1747,33 @@
  (setv symb (HySymbol "__doc__")) 
  (setv symb.start_line docstring.start_line) 
  (setv symb.start_column docstring.start_column) 
- (setv body (+ body (self._compile_assign symb docstring docstring.start_line docstring.start_column))) 
- (setv body (+ body (body.expr_as_stmt)))) 
+ (+= body (self._compile_assign symb docstring docstring.start_line docstring.start_column)) 
+ (+= body (body.expr_as_stmt))) 
  (setv allow_builtins self.allow_builtins) 
  (setv self.allow_builtins True) 
  (when (and expressions (isinstance (get expressions 0) HyList) (not (isinstance (get expressions 0) HyExpression))) 
  (setv expr (expressions.pop 0)) 
  (setv expr ((. (HyExpression (+ [(HySymbol "setv")] expr)) replace) expr)) 
- (setv body (+ body (self.compile (rewire_init expr))))) 
+ (+= body (self.compile (rewire_init expr)))) 
  (for [expression expressions] 
  (setv expr (rewire_init (hyhy.macros.macroexpand expression self))) 
- (setv body (+ body (self.compile expr)))) 
+ (+= body (self.compile expr))) 
  (setv self.allow_builtins allow_builtins) 
  (when (not body.stmts) 
- (setv body (+ body (ast.Pass :lineno expressions.start_line :col_offset expressions.start_column)))) 
- (raise (Py2HyReturnException (+ bases (ast.ClassDef :lineno expressions.start_line :col_offset expressions.start_column :decorator_list [] :name (ast_str class_name) :keywords [] :starargs None :kwargs None :bases bases_expr :body body.stmts))))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (+= body (ast.Pass :lineno expressions.start_line :col_offset expressions.start_column))) 
+ (+ bases (ast.ClassDef :lineno expressions.start_line :col_offset expressions.start_column :decorator_list [] :name (ast_str class_name) :keywords [] :starargs None :kwargs None :bases bases_expr :body body.stmts)))) 
  (defn _compile_time_hack [self expression] 
  "Compile-time hack: we want to get our new macro now
         We must provide __name__ in the namespace to make the Python
         compiler set the __module__ attribute of the macro function." 
- (try 
- (do 
  (hyhy.importer.hy_eval expression (compile_time_ns self.module_name) self.module_name) 
  (setv ret (self.compile expression)) 
  (ret.add_imports "hyhy" [None]) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ ret) 
  (with_decorator 
  (builds "defmacro") 
  (checkargs :min 1) 
  (defn compile_macro [self expression] 
- (try 
- (do 
  (expression.pop 0) 
  (setv name (expression.pop 0)) 
  (when (not (isinstance name HySymbol)) 
@@ -2005,15 +1784,11 @@
  (raise (HyTypeError name (% "macros cannot use %s" kw))))) 
  (setv new_expression ((. (HyExpression [(HyExpression [(HySymbol "hyhy.macros.macro") name]) (HyExpression (+ [(HySymbol "fn")] expression))]) replace) expression)) 
  (setv ret (self._compile_time_hack new_expression)) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ ret)) 
  (with_decorator 
  (builds "deftag") 
  (checkargs :min 2) 
  (defn compile_tag_macro [self expression] 
- (try 
- (do 
  (expression.pop 0) 
  (setv name (expression.pop 0)) 
  (when (or (= name ":") (= name "&")) 
@@ -2023,45 +1798,31 @@
  (setv name ((. (HyString name) replace) name)) 
  (setv new_expression ((. (HyExpression [(HyExpression [(HySymbol "hyhy.macros.tag") name]) (HyExpression (+ [(HySymbol "fn")] expression))]) replace) expression)) 
  (setv ret (self._compile_time_hack new_expression)) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ ret)) 
  (with_decorator 
  (builds "dispatch_tag_macro") 
  (checkargs :exact 2) 
  (defn compile_dispatch_tag_macro [self expression] 
- (try 
- (do 
  (expression.pop 0) 
  (setv tag (expression.pop 0)) 
  (when (not (= (type tag) HyString)) 
  (raise (HyTypeError tag ((. "Trying to expand a tag macro using `{0}' instead of string" format) (. (type tag) __name__))))) 
  (setv tag ((. (HyString (hy_symbol_mangle (str tag))) replace) tag)) 
  (setv expr (hyhy.macros.tag_macroexpand tag (expression.pop 0) self)) 
- (raise (Py2HyReturnException (self.compile expr)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self.compile expr))) 
  (with_decorator 
  (builds "eval_and_compile") 
  (defn compile_eval_and_compile [self expression] 
- (try 
- (do 
  (assoc expression 0 (HySymbol "do")) 
  (hyhy.importer.hy_eval expression (compile_time_ns self.module_name) self.module_name) 
  (expression.pop 0) 
- (raise (Py2HyReturnException (self._compile_branch expression)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (self._compile_branch expression))) 
  (with_decorator 
  (builds "eval_when_compile") 
  (defn compile_eval_when_compile [self expression] 
- (try 
- (do 
  (assoc expression 0 (HySymbol "do")) 
  (hyhy.importer.hy_eval expression (compile_time_ns self.module_name) self.module_name) 
- (raise (Py2HyReturnException (Result)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (Result))) 
  (with_decorator 
  (builds HyCons) 
  (defn compile_cons [self cons] 
@@ -2069,24 +1830,15 @@
  (with_decorator 
  (builds HyInteger) 
  (defn compile_integer [self number] 
- (try 
- [(raise (Py2HyReturnException (ast.Num :n (long_type number) :lineno number.start_line :col_offset number.start_column)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (ast.Num :n (long_type number) :lineno number.start_line :col_offset number.start_column))) 
  (with_decorator 
  (builds HyFloat) 
  (defn compile_float [self number] 
- (try 
- [(raise (Py2HyReturnException (ast.Num :n (float number) :lineno number.start_line :col_offset number.start_column)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (ast.Num :n (float number) :lineno number.start_line :col_offset number.start_column))) 
  (with_decorator 
  (builds HyComplex) 
  (defn compile_complex [self number] 
- (try 
- [(raise (Py2HyReturnException (ast.Num :n (complex number) :lineno number.start_line :col_offset number.start_column)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (ast.Num :n (complex number) :lineno number.start_line :col_offset number.start_column))) 
  (with_decorator 
  (builds HySymbol) 
  (defn compile_symbol [self symbol] 
@@ -2094,9 +1846,9 @@
  (do 
  (when (in "." symbol) 
  (do 
- (setv _py2hy_anon_var_G_1267 (symbol.rsplit "." 1)) 
- (setv glob (nth _py2hy_anon_var_G_1267 0)) 
- (setv local (nth _py2hy_anon_var_G_1267 1))) 
+ (setv _py2hy_anon_var_G_1421 (symbol.rsplit "." 1)) 
+ (setv glob (nth _py2hy_anon_var_G_1421 0)) 
+ (setv local (nth _py2hy_anon_var_G_1421 1))) 
  (when (not glob) 
  (raise (HyTypeError symbol ((. "cannot access attribute on anything other than a name (in order to get attributes ofexpressions, use `(. <expression> {attr})` or `(.{attr} <expression>)`)" format) :attr local)))) 
  (when (not local) 
@@ -2113,41 +1865,27 @@
  (with_decorator 
  (builds HyString) 
  (defn compile_string [self string] 
- (try 
- [(raise (Py2HyReturnException (ast.Str :s (str_type string) :lineno string.start_line :col_offset string.start_column)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (ast.Str :s (str_type string) :lineno string.start_line :col_offset string.start_column))) 
  (with_decorator 
  (builds HyBytes) 
  (defn compile_bytes [self bytestring] 
- (try 
- (do 
  (setv f (if PY3 
  ast.Bytes 
  ast.Str)) 
- (raise (Py2HyReturnException (f :s (bytes_type bytestring) :lineno bytestring.start_line :col_offset bytestring.start_column)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (f :s (bytes_type bytestring) :lineno bytestring.start_line :col_offset bytestring.start_column))) 
  (with_decorator 
  (builds HyKeyword) 
  (defn compile_keyword [self keyword] 
- (try 
- [(raise (Py2HyReturnException (ast.Str :s (str_type keyword) :lineno keyword.start_line :col_offset keyword.start_column)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (ast.Str :s (str_type keyword) :lineno keyword.start_line :col_offset keyword.start_column))) 
  (with_decorator 
  (builds HyDict) 
  (defn compile_dict [self m] 
- (try 
  (do 
- (do 
- (setv _py2hy_anon_var_G_1268 (self._compile_collect m :dict_display True)) 
- (setv keyvalues (nth _py2hy_anon_var_G_1268 0)) 
- (setv ret (nth _py2hy_anon_var_G_1268 1))) 
- (setv ret (+ ret (ast.Dict :lineno m.start_line :col_offset m.start_column :keys (get keyvalues (slice None None 2)) :values (get keyvalues (slice 1 None 2))))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))))
+ (setv _py2hy_anon_var_G_1423 (self._compile_collect m :dict_display True)) 
+ (setv keyvalues (nth _py2hy_anon_var_G_1423 0)) 
+ (setv ret (nth _py2hy_anon_var_G_1423 1))) 
+ (+= ret (ast.Dict :lineno m.start_line :col_offset m.start_column :keys (get keyvalues (slice None None 2)) :values (get keyvalues (slice 1 None 2)))) 
+ ret)))
 (defn hy_compile [tree module_name &optional [root ast.Module] [get_expr False]] 
  "
     Compile a HyObject tree into a Python AST Module.
@@ -2155,8 +1893,6 @@
     If `get_expr` is True, return a tuple (module, last_expression), where
     `last_expression` is the.
     " 
- (try 
- (do 
  (setv body []) 
  (setv expr None) 
  (when (not (isinstance tree HyObject)) 
@@ -2168,12 +1904,10 @@
  (setv result (compiler.compile tree)) 
  (setv expr result.force_expr) 
  (when (not get_expr) 
- (setv result (+ result (result.expr_as_stmt)))) 
+ (+= result (result.expr_as_stmt))) 
  (setv body (+ (compiler.imports_as_stmts tree) result.stmts)) 
  (setv ret (root :body body)) 
  (when get_expr 
  (setv expr (ast.Expression :body expr)) 
  (setv ret (, ret expr))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ ret)

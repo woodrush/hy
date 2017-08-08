@@ -16,21 +16,31 @@
  (do 
  (when (in "." arg) 
  (do 
- (setv _py2hy_anon_var_G_1235 (arg.split "." 1)) 
- (setv local (nth _py2hy_anon_var_G_1235 0)) 
- (setv full (nth _py2hy_anon_var_G_1235 1))) 
+ (setv _py2hy_anon_var_G_1236 (arg.split "." 1)) 
+ (setv local (nth _py2hy_anon_var_G_1236 0)) 
+ (setv full (nth _py2hy_anon_var_G_1236 1))) 
  (raise (Py2HyReturnException (_ast_spotcheck full (getattr root local) (getattr secondary local))))) 
  (assert (= (getattr root arg) (getattr secondary arg)))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn can_compile [expr] 
- (try 
- [(raise (Py2HyReturnException (hy_compile (import_buffer_to_hst expr) "__main__")))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (hy_compile (import_buffer_to_hst expr) "__main__"))
 (defn cant_compile [expr] 
  (try 
- [(try (do (hy_compile (import_buffer_to_hst expr) "__main__") (assert False)) (except [e Py2HyReturnException] (raise e)) (except [e HyTypeError] (assert (isinstance e.expression HyObject)) (assert e.message) (raise (Py2HyReturnException e))) (except [e HyCompileError] (assert (isinstance e.exception HyTypeError)) (assert e.traceback) (raise (Py2HyReturnException e))))] 
+ (try 
+ (do 
+ (hy_compile (import_buffer_to_hst expr) "__main__") 
+ (assert False)) 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [e HyTypeError] 
+ (assert (isinstance e.expression HyObject)) 
+ (assert e.message) 
+ (raise (Py2HyReturnException e))) 
+ (except [e HyCompileError] 
+ (assert (isinstance e.exception HyTypeError)) 
+ (assert e.traceback) 
+ (raise (Py2HyReturnException e)))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn test_ast_bad_type [] 
@@ -191,22 +201,15 @@
  (cant_compile "(require [tests.resources.tlib [qplah *]])") 
  (cant_compile "(require [tests.resources.tlib [* *]])"))
 (defn test_ast_no_pointless_imports [] 
- (try 
- (do 
  (defn contains_import_from [code] 
- (try 
- [(raise (Py2HyReturnException (any (list_comp (isinstance node ast.ImportFrom) [node (. (can_compile code) body)]))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (any (list_comp (isinstance node ast.ImportFrom) [node (. (can_compile code) body)]))) 
  (if PY3 
  (do 
  (assert (contains_import_from "reduce")) 
  (assert (not (contains_import_from "map")))) 
  (do 
  (assert (not (contains_import_from "reduce"))) 
- (assert (contains_import_from "map"))))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (assert (contains_import_from "map")))))
 (defn test_ast_good_get [] 
  "Make sure AST can compile valid get" 
  (can_compile "(get x y)"))
@@ -316,8 +319,8 @@
  (setv exception (cant_compile kwonly_demo)) 
  (assert (isinstance exception HyTypeError)) 
  (do 
- (setv _py2hy_anon_var_G_1236 exception.args) 
- (setv message (nth _py2hy_anon_var_G_1236 0))) 
+ (setv _py2hy_anon_var_G_1237 exception.args) 
+ (setv message (nth _py2hy_anon_var_G_1237 0))) 
  (assert (= message "keyword-only arguments are only available under Python 3")))))
 (defn test_lambda_list_keywords_mixed [] 
  " Ensure we can mix them up." 
@@ -328,42 +331,35 @@
 (defn test_missing_keyword_argument_value [] 
  "Ensure the compiler chokes on missing keyword argument values." 
  (try 
- [(try [(can_compile "((fn [x] x) :x)")] (except [e Py2HyReturnException] (raise e)) (except [e HyTypeError] (assert (= e.message "Keyword argument :x needs a value."))) (else (assert False)))] 
+ (try 
+ (can_compile "((fn [x] x) :x)") 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [e HyTypeError] 
+ (assert (= e.message "Keyword argument :x needs a value."))) 
+ (else (assert False))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn test_ast_unicode_strings [] 
  "Ensure we handle unicode strings correctly" 
- (try 
- (do 
  (defn _compile_string [s] 
- (try 
- (do 
  (setv hy_s (HyString s)) 
  (do 
- (setv _py2hy_anon_var_G_1237 0) 
- (setv hy_s.start_line _py2hy_anon_var_G_1237) 
- (setv hy_s.end_line _py2hy_anon_var_G_1237)) 
+ (setv _py2hy_anon_var_G_1240 0) 
+ (setv hy_s.start_line _py2hy_anon_var_G_1240) 
+ (setv hy_s.end_line _py2hy_anon_var_G_1240)) 
  (do 
- (setv _py2hy_anon_var_G_1238 0) 
- (setv hy_s.start_column _py2hy_anon_var_G_1238) 
- (setv hy_s.end_column _py2hy_anon_var_G_1238)) 
+ (setv _py2hy_anon_var_G_1241 0) 
+ (setv hy_s.start_column _py2hy_anon_var_G_1241) 
+ (setv hy_s.end_column _py2hy_anon_var_G_1241)) 
  (setv code (hy_compile hy_s "__main__")) 
- (raise (Py2HyReturnException (. (. (get code.body 0) value) s)))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (. (. (get code.body 0) value) s)) 
  (assert (= (_compile_string "test") "test")) 
  (assert (= (_compile_string "αβ") "αβ")) 
- (assert (= (_compile_string "Ã©") "Ã©"))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (assert (= (_compile_string "Ã©") "Ã©")))
 (defn test_ast_unicode_vs_bytes [] 
- (try 
- (do 
  (defn f [x] 
- (try 
- [(raise (Py2HyReturnException (. (. (get (. (can_compile x) body) 0) value) s)))] 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (. (. (get (. (can_compile x) body) 0) value) s)) 
  (assert (= (f "\"hello\"") "hello")) 
  (assert (is (type (f "\"hello\"")) (if PY3 
  str 
@@ -376,13 +372,17 @@
  str))) 
  (assert (= (f "b\"\\xa0\"") (if PY3 
  (bytes [160]) 
- (chr 160))))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (chr 160)))))
 (defn test_compile_error [] 
  "Ensure we get compile error in tricky cases" 
  (try 
- [(try [(can_compile "(fn [] (in [1 2 3]))")] (except [e Py2HyReturnException] (raise e)) (except [e HyTypeError] (assert (= e.message "`in' needs 2 arguments, got 1"))) (else (assert False)))] 
+ (try 
+ (can_compile "(fn [] (in [1 2 3]))") 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [e HyTypeError] 
+ (assert (= e.message "`in' needs 2 arguments, got 1"))) 
+ (else (assert False))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn test_for_compile_error [] 
@@ -390,35 +390,35 @@
  (try 
  (do 
  (try 
- [(can_compile "(fn [] (for)")] 
+ (can_compile "(fn [] (for)") 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [e LexException] 
  (assert (= e.message "Premature end of input"))) 
  (else (assert False))) 
  (try 
- [(can_compile "(fn [] (for)))")] 
+ (can_compile "(fn [] (for)))") 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [e LexException] 
  (assert (= e.message "Ran into a RPAREN where it wasn't expected."))) 
  (else (assert False))) 
  (try 
- [(can_compile "(fn [] (for [x] x))")] 
+ (can_compile "(fn [] (for [x] x))") 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [e HyTypeError] 
  (assert (= e.message "`for' requires an even number of args."))) 
  (else (assert False))) 
  (try 
- [(can_compile "(fn [] (for [x xx]))")] 
+ (can_compile "(fn [] (for [x xx]))") 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [e HyTypeError] 
  (assert (= e.message "`for' requires a body to evaluate"))) 
  (else (assert False))) 
  (try 
- [(can_compile "(fn [] (for [x xx] (else 1)))")] 
+ (can_compile "(fn [] (for [x xx] (else 1)))") 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [e HyTypeError] 

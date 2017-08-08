@@ -10,13 +10,8 @@
 (import [pytest])
 (setv hy_dir (os.environ.get "HY_DIR" ""))
 (defn hr [&optional [s ""]] 
- (try 
- [(raise (Py2HyReturnException (+ "hyhy --repl-output-fn=hyhy.contrib.hy-repr.hy-repr " s)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (+ "hyhy --repl-output-fn=hyhy.contrib.hy-repr.hy-repr " s))
 (defn run_cmd [cmd &optional [stdin_data None] [expect 0] [dontwritebytecode False]] 
- (try 
- (do 
  (setv env None) 
  (when dontwritebytecode 
  (setv env (dict os.environ)) 
@@ -29,15 +24,23 @@
  (setv stdout "") 
  (setv stderr "") 
  (while (is (p.poll) None) 
- (setv stdout (+ stdout (p.stdout.read))) 
- (setv stderr (+ stderr (p.stderr.read)))) 
+ (+= stdout (p.stdout.read)) 
+ (+= stderr (p.stderr.read))) 
  (assert (= p.returncode expect)) 
- (raise (Py2HyReturnException (, stdout stderr)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (, stdout stderr))
 (defn rm [fpath] 
  (try 
- [(try [(os.remove fpath)] (except [e Py2HyReturnException] (raise e)) (except [[IOError OSError]] (try [(os.rmdir fpath)] (except [e Py2HyReturnException] (raise e)) (except [[IOError OSError]] (do)))))] 
+ (try 
+ (os.remove fpath) 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [[IOError OSError]] 
+ (try 
+ (os.rmdir fpath) 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [[IOError OSError]] 
+ (do))))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn test_bin_hy [] 
@@ -204,11 +207,11 @@
  (continue)) 
  (when (and (= f "py35_only_tests.hy") (not PY35)) 
  (continue)) 
- (setv i (+ i 1)) 
+ (+= i 1) 
  (do 
- (setv _py2hy_anon_var_G_1264 (run_cmd (+ "hy2py -s -a " (os.path.join dirpath f)))) 
- (setv output (nth _py2hy_anon_var_G_1264 0)) 
- (setv err (nth _py2hy_anon_var_G_1264 1))) 
+ (setv _py2hy_anon_var_G_1265 (run_cmd (+ "hy2py -s -a " (os.path.join dirpath f)))) 
+ (setv output (nth _py2hy_anon_var_G_1265 0)) 
+ (setv err (nth _py2hy_anon_var_G_1265 1))) 
  (assert (> (len output) 1) f) 
  (assert (= (len err) 0) f)))) 
  (assert i))
@@ -218,21 +221,21 @@
  (assert (= (str quit) "Use (quit) or Ctrl-D (i.e. EOF) to exit")))
 (defn test_bin_hy_main [] 
  (do 
- (setv _py2hy_anon_var_G_1265 (run_cmd "hy tests/resources/bin/main.hy")) 
- (setv output (nth _py2hy_anon_var_G_1265 0))) 
+ (setv _py2hy_anon_var_G_1266 (run_cmd "hy tests/resources/bin/main.hy")) 
+ (setv output (nth _py2hy_anon_var_G_1266 0))) 
  (assert (in "Hello World" output)))
 (defn test_bin_hy_main_args [] 
  (do 
- (setv _py2hy_anon_var_G_1266 (run_cmd "hy tests/resources/bin/main.hy test 123")) 
- (setv output (nth _py2hy_anon_var_G_1266 0))) 
+ (setv _py2hy_anon_var_G_1267 (run_cmd "hy tests/resources/bin/main.hy test 123")) 
+ (setv output (nth _py2hy_anon_var_G_1267 0))) 
  (assert (in "test" output)) 
  (assert (in "123" output)))
 (defn test_bin_hy_main_exitvalue [] 
  (run_cmd "hy tests/resources/bin/main.hy exit1" :expect 1))
 (defn test_bin_hy_no_main [] 
  (do 
- (setv _py2hy_anon_var_G_1267 (run_cmd "hy tests/resources/bin/nomain.hy")) 
- (setv output (nth _py2hy_anon_var_G_1267 0))) 
+ (setv _py2hy_anon_var_G_1268 (run_cmd "hy tests/resources/bin/nomain.hy")) 
+ (setv output (nth _py2hy_anon_var_G_1268 0))) 
  (assert (in "This Should Still Work" output)))
 (with_decorator 
  (pytest.mark.parametrize "scenario" ["normal" "prevent_by_force" "prevent_by_env"]) 
@@ -245,36 +248,37 @@
  (when (= scenario "prevent_by_force") 
  (os.mkdir (get_bytecode_path fpath))) 
  (do 
- (setv _py2hy_anon_var_G_1268 (run_cmd cmd :dontwritebytecode (= scenario "prevent_by_env"))) 
- (setv output (nth _py2hy_anon_var_G_1268 0))) 
+ (setv _py2hy_anon_var_G_1269 (run_cmd cmd :dontwritebytecode (= scenario "prevent_by_env"))) 
+ (setv output (nth _py2hy_anon_var_G_1269 0))) 
  (assert (in "Hello from macro" output)) 
  (assert (in "The macro returned: boink" output)) 
- (if (= scenario "normal") 
+ (cond 
+ [(= scenario "normal") 
+ (assert (os.path.exists (get_bytecode_path fpath)))] 
+ [(= scenario "prevent_by_env") 
+ (assert (not (os.path.exists (get_bytecode_path fpath))))] 
+ [True 
+ (do)]) 
  (do 
- (assert (os.path.exists (get_bytecode_path fpath)))) 
- (do 
- (when (= scenario "prevent_by_env") 
- (assert (not (os.path.exists (get_bytecode_path fpath))))))) 
- (do 
- (setv _py2hy_anon_var_G_1269 (run_cmd cmd)) 
- (setv output (nth _py2hy_anon_var_G_1269 0))) 
+ (setv _py2hy_anon_var_G_1270 (run_cmd cmd)) 
+ (setv output (nth _py2hy_anon_var_G_1270 0))) 
  (assert (^ (in "Hello from macro" output) (= scenario "normal"))) 
  (assert (in "The macro returned: boink" output))))
 (defn test_bin_hy_module_main [] 
  (do 
- (setv _py2hy_anon_var_G_1270 (run_cmd "hy -m tests.resources.bin.main")) 
- (setv output (nth _py2hy_anon_var_G_1270 0))) 
+ (setv _py2hy_anon_var_G_1271 (run_cmd "hy -m tests.resources.bin.main")) 
+ (setv output (nth _py2hy_anon_var_G_1271 0))) 
  (assert (in "Hello World" output)))
 (defn test_bin_hy_module_main_args [] 
  (do 
- (setv _py2hy_anon_var_G_1271 (run_cmd "hy -m tests.resources.bin.main test 123")) 
- (setv output (nth _py2hy_anon_var_G_1271 0))) 
+ (setv _py2hy_anon_var_G_1272 (run_cmd "hy -m tests.resources.bin.main test 123")) 
+ (setv output (nth _py2hy_anon_var_G_1272 0))) 
  (assert (in "test" output)) 
  (assert (in "123" output)))
 (defn test_bin_hy_module_main_exitvalue [] 
  (run_cmd "hy -m tests.resources.bin.main exit1" :expect 1))
 (defn test_bin_hy_module_no_main [] 
  (do 
- (setv _py2hy_anon_var_G_1272 (run_cmd "hy -m tests.resources.bin.nomain")) 
- (setv output (nth _py2hy_anon_var_G_1272 0))) 
+ (setv _py2hy_anon_var_G_1273 (run_cmd "hy -m tests.resources.bin.nomain")) 
+ (setv output (nth _py2hy_anon_var_G_1273 0))) 
  (assert (in "This Should Still Work" output)))

@@ -24,16 +24,13 @@
  (defn __init__ [self name] 
  (setv self.name name)) 
  (defn __repr__ [self] 
- (try 
- [(raise (Py2HyReturnException (% "Use (%s) or Ctrl-D (i.e. EOF) to exit" self.name)))] 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (% "Use (%s) or Ctrl-D (i.e. EOF) to exit" self.name)) 
  (setv __str__ __repr__) 
  (defn __call__ [self &optional [code None]] 
  (try 
  (do 
  (try 
- [(sys.stdin.close)] 
+ (sys.stdin.close) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [] 
@@ -46,31 +43,35 @@
 (defclass HyREPL [code.InteractiveConsole] 
  (defn __init__ [self &optional [spy False] [output_fn None] [locals None] [filename "<input>"]] 
  (setv self.spy spy) 
- (if (is output_fn None) 
- (do 
- (setv self.output_fn repr)) 
- (do 
- (if (callable output_fn) 
- (do 
- (setv self.output_fn output_fn)) 
+ (cond 
+ [(is output_fn None) 
+ (setv self.output_fn repr)] 
+ [(callable output_fn) 
+ (setv self.output_fn output_fn)] 
+ [True 
  (do 
  (setv f (hy_symbol_mangle output_fn)) 
  (if (in "." output_fn) 
  (do 
  (do 
- (setv _py2hy_anon_var_G_1235 (f.rsplit "." 1)) 
- (setv module (nth _py2hy_anon_var_G_1235 0)) 
- (setv f (nth _py2hy_anon_var_G_1235 1))) 
+ (setv _py2hy_anon_var_G_1238 (f.rsplit "." 1)) 
+ (setv module (nth _py2hy_anon_var_G_1238 0)) 
+ (setv f (nth _py2hy_anon_var_G_1238 1))) 
  (setv self.output_fn (getattr (importlib.import_module module) f))) 
  (do 
- (setv self.output_fn (get __builtins__ f)))))))) 
+ (setv self.output_fn (get __builtins__ f)))))]) 
  (code.InteractiveConsole.__init__ self :locals locals :filename filename)) 
  (defn runsource [self source &optional [filename "<input>"] [symbol "single"]] 
  (try 
  (do 
  (global SIMPLE_TRACEBACKS) 
  (try 
- [(try [(setv do (import_buffer_to_hst source))] (except [e Py2HyReturnException] (raise e)) (except [PrematureEndOfInput] (raise (Py2HyReturnException True))))] 
+ (try 
+ (setv do (import_buffer_to_hst source)) 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [PrematureEndOfInput] 
+ (raise (Py2HyReturnException True)))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [e LexException] 
@@ -110,8 +111,7 @@
 (with_decorator 
  (macro "koan") 
  (defn koan_macro [] 
- (try 
- [(raise (Py2HyReturnException (HyExpression [(HySymbol "print") (HyString "
+ (HyExpression [(HySymbol "print") (HyString "
   Ummon asked the head monk, \"What sutra are you lecturing on?\"
   \"The Nirvana Sutra.\"
   \"The Nirvana Sutra has the Four Virtues, hasn't it?\"
@@ -123,14 +123,11 @@
   Ummon struck the cup and asked, \"You understand?\"
   \"No,\" said the monk.
   \"Then,\" said Ummon, \"You'd better go on with your lectures on the sutra.\"
-")])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+")])))
 (with_decorator 
  (macro "ideas") 
  (defn ideas_macro [] 
- (try 
- [(raise (Py2HyReturnException (HyExpression [(HySymbol "print") (HyString "
+ (HyExpression [(HySymbol "print") (HyString "
 
     => (import [sh [figlet]])
     => (figlet \"Hi, Hy!\")
@@ -158,24 +155,26 @@
 ;;; swaggin' functional bits (Python rulez)
 (max (map (fn [x] (len x)) [\"hi\" \"my\" \"name\" \"is\" \"paul\"]))
 
-")])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+")])))
 (hyhy.macros.require_hyhy "hyhy.cmdline" "__console__" :all_macros True)
 (hyhy.macros.require_hyhy "hyhy.cmdline" "__main__" :all_macros True)
 (setv SIMPLE_TRACEBACKS True)
 (defn pretty_error [func &kwargs kw &rest args] 
  (try 
- [(try [(raise (Py2HyReturnException (func (unpack_iterable args) (unpack_mapping kw))))] (except [e Py2HyReturnException] (raise e)) (except [e [HyTypeError LexException]] (when SIMPLE_TRACEBACKS (print e :file sys.stderr) (sys.exit 1)) (raise)))] 
+ (try 
+ (raise (Py2HyReturnException (func (unpack_iterable args) (unpack_mapping kw)))) 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [e [HyTypeError LexException]] 
+ (when SIMPLE_TRACEBACKS 
+ (print e :file sys.stderr) 
+ (sys.exit 1)) 
+ (raise))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn run_command [source] 
- (try 
- (do 
  (pretty_error import_buffer_to_module "__main__" source) 
- (raise (Py2HyReturnException 0))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ 0)
 (defn run_module [mod_name] 
  (try 
  (do 
@@ -190,28 +189,18 @@
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn run_file [filename] 
- (try 
- (do 
  (import [hyhy.importer [import_file_to_module]]) 
  (pretty_error import_file_to_module "__main__" filename) 
- (raise (Py2HyReturnException 0))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ 0)
 (defn run_repl [&optional [hr None] &kwargs kwargs] 
- (try 
- (do 
  (import [platform]) 
  (setv sys.ps1 "=> ") 
  (setv sys.ps2 "... ") 
  (setv namespace {"__name__" "__console__" "__doc__" ""}) 
  (with [(completion (Completer namespace))] (when (not hr) 
  (setv hr (HyREPL (unpack_mapping kwargs)))) (hr.interact ((. "{appname} {version} using {py}({build}) {pyversion} on {os}" format) :appname hyhy.__appname__ :version hyhy.__version__ :py (platform.python_implementation) :build (get (platform.python_build) 0) :pyversion (platform.python_version) :os (platform.system)))) 
- (raise (Py2HyReturnException 0))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ 0)
 (defn run_icommand [source &kwargs kwargs] 
- (try 
- (do 
  (setv hr (HyREPL (unpack_mapping kwargs))) 
  (if (os.path.exists source) 
  (do 
@@ -220,9 +209,7 @@
  (do 
  (setv filename "<input>"))) 
  (hr.runsource source :filename filename :symbol "single") 
- (raise (Py2HyReturnException (run_repl hr)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (run_repl hr))
 (setv USAGE "%(prog)s [-h | -i cmd | -c cmd | -m module | file | -] [arg] ...")
 (setv VERSION (+ "%(prog)s " hyhy.__version__))
 (setv EPILOG "  file         program read from script
@@ -266,7 +253,7 @@
  (raise (Py2HyReturnException (run_command (sys.stdin.read))))) 
  (do 
  (try 
- [(raise (Py2HyReturnException (run_file (get options.args 0))))] 
+ (raise (Py2HyReturnException (run_file (get options.args 0)))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [e HyIOError] 
@@ -322,7 +309,7 @@
  (do 
  (for [h hst] 
  (try 
- [(print h)] 
+ (print h) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [] 
@@ -353,7 +340,13 @@
  e.retvalue)))
 (defn _print_for_windows [src] 
  (try 
- [(for [line (src.split "
-")] (try [(print line)] (except [e Py2HyReturnException] (raise e)) (except [] (print (line.encode "utf-8")))))] 
+ (for [line (src.split "
+")] 
+ (try 
+ (print line) 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [] 
+ (print (line.encode "utf-8"))))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))

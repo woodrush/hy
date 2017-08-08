@@ -23,37 +23,32 @@
 (defn ast_compile [ast filename mode] 
  "Compile AST.
     Like Python's compile, but with some special flags." 
- (try 
- (do 
  (setv flags (| __future__.CO_FUTURE_DIVISION __future__.CO_FUTURE_PRINT_FUNCTION)) 
- (raise (Py2HyReturnException (compile ast filename mode flags)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (compile ast filename mode flags))
 (defn import_buffer_to_hst [buf] 
  "Import content from buf and return a Hy AST." 
- (try 
- [(raise (Py2HyReturnException (HyExpression (+ [(HySymbol "do")] (tokenize (+ buf "
-"))))))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (HyExpression (+ [(HySymbol "do")] (tokenize (+ buf "
+")))))
 (defn import_file_to_hst [fpath] 
  "Import content from fpath and return a Hy AST." 
  (try 
- [(try (do (with [f (open fpath "r" :encoding "utf-8")] (setv buf (f.read))) (setv buf (re.sub "\\A#!.*" "" buf)) (raise (Py2HyReturnException (import_buffer_to_hst buf)))) (except [e Py2HyReturnException] (raise e)) (except [e IOError] (raise (HyIOError e.errno e.strerror e.filename))))] 
+ (try 
+ (do 
+ (with [f (open fpath "r" :encoding "utf-8")] (setv buf (f.read))) 
+ (setv buf (re.sub "\\A#!.*" "" buf)) 
+ (raise (Py2HyReturnException (import_buffer_to_hst buf)))) 
+ (except [e Py2HyReturnException] 
+ (raise e)) 
+ (except [e IOError] 
+ (raise (HyIOError e.errno e.strerror e.filename)))) 
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn import_buffer_to_ast [buf module_name] 
  " Import content from buf and return a Python AST." 
- (try 
- [(raise (Py2HyReturnException (hyhy.compiler.hy_compile (import_buffer_to_hst buf) module_name)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (hyhy.compiler.hy_compile (import_buffer_to_hst buf) module_name))
 (defn import_file_to_ast [fpath module_name] 
  "Import content from fpath and return a Python AST." 
- (try 
- [(raise (Py2HyReturnException (hyhy.compiler.hy_compile (import_file_to_hst fpath) module_name)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (hyhy.compiler.hy_compile (import_file_to_hst fpath) module_name))
 (defn import_file_to_module [module_name fpath &optional [loader None]] 
  "Import Hy source from fpath and put it into a Python module.
 
@@ -93,7 +88,7 @@
  (setv code (ast_compile _ast fpath "exec")) 
  (when (not (os.environ.get "PYTHONDONTWRITEBYTECODE")) 
  (try 
- [(write_code_as_pyc fpath code)] 
+ (write_code_as_pyc fpath code) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [[IOError OSError]] 
@@ -155,8 +150,6 @@
 
        => (eval (read-str \"(+ 1 1)\"))
        2" 
- (try 
- (do 
  (when (is namespace None) 
  (setv frame (get (get (inspect.stack) 1) 0)) 
  (setv namespace (. (inspect.getargvalues frame) locals))) 
@@ -174,9 +167,9 @@
  (when (not (isinstance module_name string_types)) 
  (raise (HyTypeError foo "Module name must be a string"))) 
  (do 
- (setv _py2hy_anon_var_G_1236 (hyhy.compiler.hy_compile hytree module_name :get_expr True)) 
- (setv _ast (nth _py2hy_anon_var_G_1236 0)) 
- (setv expr (nth _py2hy_anon_var_G_1236 1))) 
+ (setv _py2hy_anon_var_G_1237 (hyhy.compiler.hy_compile hytree module_name :get_expr True)) 
+ (setv _ast (nth _py2hy_anon_var_G_1237 0)) 
+ (setv expr (nth _py2hy_anon_var_G_1237 1))) 
  (for [node (ast.walk _ast)] 
  (setv node.lineno 1) 
  (setv node.col_offset 1)) 
@@ -188,9 +181,7 @@
  (when (not (isinstance namespace dict)) 
  (raise (HyTypeError foo "Globals must be a dictionary"))) 
  (builtins.eval (ast_compile _ast "<eval_body>" "exec") namespace) 
- (raise (Py2HyReturnException (builtins.eval (ast_compile expr "<eval>" "eval") namespace)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (builtins.eval (ast_compile expr "<eval>" "eval") namespace))
 (defn write_hy_as_pyc [fname] 
  (setv _ast (import_file_to_ast fname (os.path.basename (get (os.path.splitext fname) 0)))) 
  (setv code (ast_compile _ast fname "exec")) 
@@ -202,7 +193,7 @@
  (setv timestamp (long_type st.st_mtime)) 
  (setv cfile (get_bytecode_path fname)) 
  (try 
- [(os.makedirs (os.path.dirname cfile))] 
+ (os.makedirs (os.path.dirname cfile)) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [[IOError OSError]] 
@@ -260,6 +251,19 @@
  e.retvalue)))
 (defn get_bytecode_path [source_path] 
  (try 
- [(if PY34 (do (import [importlib.util]) (raise (Py2HyReturnException (importlib.util.cache_from_source source_path)))) (do (if (hasattr imp "cache_from_source") (do (raise (Py2HyReturnException (imp.cache_from_source source_path)))) (do (do (setv _py2hy_anon_var_G_1237 (os.path.split source_path)) (setv d (nth _py2hy_anon_var_G_1237 0)) (setv f (nth _py2hy_anon_var_G_1237 1))) (raise (Py2HyReturnException (os.path.join d (re.sub "(?:\\.[^.]+)?\\Z" ".pyc" f))))))))] 
+ (cond 
+ [PY34 
+ (do 
+ (import [importlib.util]) 
+ (raise (Py2HyReturnException (importlib.util.cache_from_source source_path))))] 
+ [(hasattr imp "cache_from_source") 
+ (raise (Py2HyReturnException (imp.cache_from_source source_path)))] 
+ [True 
+ (do 
+ (do 
+ (setv _py2hy_anon_var_G_1239 (os.path.split source_path)) 
+ (setv d (nth _py2hy_anon_var_G_1239 0)) 
+ (setv f (nth _py2hy_anon_var_G_1239 1))) 
+ (raise (Py2HyReturnException (os.path.join d (re.sub "(?:\\.[^.]+)?\\Z" ".pyc" f)))))]) 
  (except [e Py2HyReturnException] 
  e.retvalue)))

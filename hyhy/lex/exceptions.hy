@@ -12,8 +12,6 @@
  (setv self.source source) 
  (setv self.filename "<stdin>")) 
  (defn __str__ [self] 
- (try 
- (do 
  (import [hyhy.errors [colored]]) 
  (setv line self.lineno) 
  (setv start self.colno) 
@@ -21,24 +19,22 @@
  (setv source (self.source.split "
 ")) 
  (when (and (> line 0) (> start 0)) 
- (setv result (+ result (% "  File \"%s\", line %d, column %d
+ (+= result (% "  File \"%s\", line %d, column %d
 
-" (, self.filename line start)))) 
+" (, self.filename line start))) 
  (if (> (len self.source) 0) 
  (do 
  (setv source_line (get source (- line 1)))) 
  (do 
  (setv source_line ""))) 
- (setv result (+ result (% "  %s
-" (colored.red source_line)))) 
- (setv result (+ result (% "  %s%s
-" (, (* " " (- start 1)) (colored.green "^")))))) 
- (setv result (+ result (colored.yellow (% "LexException: %s
+ (+= result (% "  %s
+" (colored.red source_line))) 
+ (+= result (% "  %s%s
+" (, (* " " (- start 1)) (colored.green "^"))))) 
+ (+= result (colored.yellow (% "LexException: %s
 
-" self.message)))) 
- (raise (Py2HyReturnException result))) 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+" self.message))) 
+ result))
 (defclass PrematureEndOfInput [LexException] 
  "We got a premature end of input" 
  (defn __init__ [self message] 

@@ -6,14 +6,8 @@
 (with_decorator 
  (macro "qplah") 
  (defn tmac [&rest tree] 
- (try 
- [(raise (Py2HyReturnException (HyList (+ (, (HyInteger 8)) tree))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyList (+ (, (HyInteger 8)) tree))))
 (with_decorator 
  (macro "parald") 
  (defn tmac2 [&rest tree] 
- (try 
- [(raise (Py2HyReturnException (HyList (+ (, (HyInteger 9)) tree))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyList (+ (, (HyInteger 9)) tree))))

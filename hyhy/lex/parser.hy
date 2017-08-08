@@ -10,8 +10,6 @@
 (import [hyhy.lex.exceptions [LexException PrematureEndOfInput]])
 (setv pg (ParserGenerator (+ (list_comp rule.name [rule lexer.rules]) ["$end"]) :cache_id "hy_parser"))
 (defn hy_symbol_mangle [p] 
- (try 
- (do 
  (when (and (p.startswith "*") (p.endswith "*") (not_in p (, "*" "**"))) 
  (setv p ((. (get p (slice 1 (- 1) None)) upper)))) 
  (when (and (in "-" p) (!= p "-")) 
@@ -20,12 +18,8 @@
  (setv p (% "is_%s" (get p (slice None (- 1) None))))) 
  (when (and (p.endswith "!") (!= p "!")) 
  (setv p (% "%s_bang" (get p (slice None (- 1) None))))) 
- (raise (Py2HyReturnException p))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ p)
 (defn hy_symbol_unmangle [p] 
- (try 
- (do 
  (setv p (str_type p)) 
  (when (and (p.endswith "_bang") (!= p "_bang")) 
  (setv p (+ (get p (slice None (- (len "_bang")) None)) "!"))) 
@@ -35,17 +29,11 @@
  (setv p (p.replace "_" "-"))) 
  (when (and (all (list_comp (or (and (c.isalpha) (c.isupper)) (= c "_")) [c p])) (any (list_comp (c.isalpha) [c p]))) 
  (setv p (+ (+ "*" (p.lower)) "*"))) 
- (raise (Py2HyReturnException p))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ p)
 (defn set_boundaries [fun] 
- (try 
- (do 
  (with_decorator 
  (wraps fun) 
  (defn wrapped [p] 
- (try 
- (do 
  (setv start (. (get p 0) source_pos)) 
  (setv end (. (get p (- 1)) source_pos)) 
  (setv ret (fun p)) 
@@ -58,46 +46,28 @@
  (do 
  (setv ret.end_line start.lineno) 
  (setv ret.end_column (+ start.colno (len (. (get p 0) value)))))) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
- (raise (Py2HyReturnException wrapped))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ ret)) 
+ wrapped)
 (defn set_quote_boundaries [fun] 
- (try 
- (do 
  (with_decorator 
  (wraps fun) 
  (defn wrapped [p] 
- (try 
- (do 
  (setv start (. (get p 0) source_pos)) 
  (setv ret (fun p)) 
  (setv ret.start_line start.lineno) 
  (setv ret.start_column start.colno) 
  (setv ret.end_line (. (get p (- 1)) end_line)) 
  (setv ret.end_column (. (get p (- 1)) end_column)) 
- (raise (Py2HyReturnException ret))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
- (raise (Py2HyReturnException wrapped))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ ret)) 
+ wrapped)
 (with_decorator 
  (pg.production "main : list_contents") 
  (defn main [p] 
- (try 
- [(raise (Py2HyReturnException (get p 0)))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (get p 0)))
 (with_decorator 
  (pg.production "main : $end") 
  (defn main_empty [p] 
- (try 
- [(raise (Py2HyReturnException []))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ []))
 (defn reject_spurious_dots [&rest items] 
  "Reject the spurious dots from items" 
  (for [list items] 
@@ -126,24 +96,15 @@
  (pg.production "paren : LPAREN RPAREN") 
  set_boundaries 
  (defn empty_paren [p] 
- (try 
- [(raise (Py2HyReturnException (HyExpression [])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyExpression [])))
 (with_decorator 
  (pg.production "list_contents : term list_contents") 
  (defn list_contents [p] 
- (try 
- [(raise (Py2HyReturnException (+ [(get p 0)] (get p 1))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (+ [(get p 0)] (get p 1))))
 (with_decorator 
  (pg.production "list_contents : term") 
  (defn list_contents_single [p] 
- (try 
- [(raise (Py2HyReturnException [(get p 0)]))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ [(get p 0)]))
 (with_decorator 
  (pg.production "term : identifier") 
  (pg.production "term : paren") 
@@ -152,164 +113,105 @@
  (pg.production "term : set") 
  (pg.production "term : string") 
  (defn term [p] 
- (try 
- [(raise (Py2HyReturnException (get p 0)))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (get p 0)))
 (with_decorator 
  (pg.production "term : QUOTE term") 
  set_quote_boundaries 
  (defn term_quote [p] 
- (try 
- [(raise (Py2HyReturnException (HyExpression [(HySymbol "quote") (get p 1)])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyExpression [(HySymbol "quote") (get p 1)])))
 (with_decorator 
  (pg.production "term : QUASIQUOTE term") 
  set_quote_boundaries 
  (defn term_quasiquote [p] 
- (try 
- [(raise (Py2HyReturnException (HyExpression [(HySymbol "quasiquote") (get p 1)])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyExpression [(HySymbol "quasiquote") (get p 1)])))
 (with_decorator 
  (pg.production "term : UNQUOTE term") 
  set_quote_boundaries 
  (defn term_unquote [p] 
- (try 
- [(raise (Py2HyReturnException (HyExpression [(HySymbol "unquote") (get p 1)])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyExpression [(HySymbol "unquote") (get p 1)])))
 (with_decorator 
  (pg.production "term : UNQUOTESPLICE term") 
  set_quote_boundaries 
  (defn term_unquote_splice [p] 
- (try 
- [(raise (Py2HyReturnException (HyExpression [(HySymbol "unquote_splice") (get p 1)])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyExpression [(HySymbol "unquote_splice") (get p 1)])))
 (with_decorator 
  (pg.production "term : HASHSTARS term") 
  set_quote_boundaries 
  (defn term_hashstars [p] 
- (try 
- (do 
  (setv n_stars (len (get ((. (get p 0) getstr)) (slice 1 None None)))) 
- (if (= n_stars 1) 
- (do 
- (setv sym "unpack_iterable")) 
- (do 
- (if (= n_stars 2) 
- (do 
- (setv sym "unpack_mapping")) 
- (do 
- (raise (LexException "Too many stars in `#*` construct (if you want to unpack a symbol beginning with a star, separate it with whitespace)" (. (. (get p 0) source_pos) lineno) (. (. (get p 0) source_pos) colno))))))) 
- (raise (Py2HyReturnException (HyExpression [(HySymbol sym) (get p 1)])))) 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (cond 
+ [(= n_stars 1) 
+ (setv sym "unpack_iterable")] 
+ [(= n_stars 2) 
+ (setv sym "unpack_mapping")] 
+ [True 
+ (raise (LexException "Too many stars in `#*` construct (if you want to unpack a symbol beginning with a star, separate it with whitespace)" (. (. (get p 0) source_pos) lineno) (. (. (get p 0) source_pos) colno)))]) 
+ (HyExpression [(HySymbol sym) (get p 1)])))
 (with_decorator 
  (pg.production "term : HASHOTHER term") 
  set_quote_boundaries 
  (defn hash_other [p] 
- (try 
- (do 
  (setv st (get ((. (get p 0) getstr)) (slice 1 None None))) 
  (setv str_object (HyString st)) 
  (setv expr (get p 1)) 
- (raise (Py2HyReturnException (HyExpression [(HySymbol "dispatch_tag_macro") str_object expr])))) 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyExpression [(HySymbol "dispatch_tag_macro") str_object expr])))
 (with_decorator 
  (pg.production "set : HLCURLY list_contents RCURLY") 
  set_boundaries 
  (defn t_set [p] 
- (try 
- [(raise (Py2HyReturnException (HySet (get p 1))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HySet (get p 1))))
 (with_decorator 
  (pg.production "set : HLCURLY RCURLY") 
  set_boundaries 
  (defn empty_set [p] 
- (try 
- [(raise (Py2HyReturnException (HySet [])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HySet [])))
 (with_decorator 
  (pg.production "dict : LCURLY list_contents RCURLY") 
  set_boundaries 
  (defn t_dict [p] 
- (try 
- [(raise (Py2HyReturnException (HyDict (get p 1))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyDict (get p 1))))
 (with_decorator 
  (pg.production "dict : LCURLY RCURLY") 
  set_boundaries 
  (defn empty_dict [p] 
- (try 
- [(raise (Py2HyReturnException (HyDict [])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyDict [])))
 (with_decorator 
  (pg.production "list : LBRACKET list_contents RBRACKET") 
  set_boundaries 
  (defn t_list [p] 
- (try 
- [(raise (Py2HyReturnException (HyList (get p 1))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyList (get p 1))))
 (with_decorator 
  (pg.production "list : LBRACKET RBRACKET") 
  set_boundaries 
  (defn t_empty_list [p] 
- (try 
- [(raise (Py2HyReturnException (HyList [])))] 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ (HyList [])))
 (if PY3 
  (do 
  (defn uni_hystring [s] 
- (try 
- [(raise (Py2HyReturnException (HyString (literal_eval s))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (HyString (literal_eval s))) 
  (defn hybytes [s] 
- (try 
- [(raise (Py2HyReturnException (HyBytes (literal_eval (+ "b" s)))))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))) 
+ (HyBytes (literal_eval (+ "b" s))))) 
  (do 
  (defn uni_hystring [s] 
- (try 
- [(raise (Py2HyReturnException (HyString (literal_eval (+ "u" s)))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (HyString (literal_eval (+ "u" s)))) 
  (defn hybytes [s] 
- (try 
- [(raise (Py2HyReturnException (HyBytes (literal_eval s))))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))))
+ (HyBytes (literal_eval s)))))
 (with_decorator 
  (pg.production "string : STRING") 
  set_boundaries 
  (defn t_string [p] 
- (try 
- (do 
  (setv s (get (. (get p 0) value) (slice None (- 1) None))) 
  (do 
- (setv _py2hy_anon_var_G_1235 (s.split "\"" 1)) 
- (setv header (nth _py2hy_anon_var_G_1235 0)) 
- (setv s (nth _py2hy_anon_var_G_1235 1))) 
+ (setv _py2hy_anon_var_G_1236 (s.split "\"" 1)) 
+ (setv header (nth _py2hy_anon_var_G_1236 0)) 
+ (setv s (nth _py2hy_anon_var_G_1236 1))) 
  (setv header (header.replace "u" "")) 
  (setv is_bytestring (in "b" header)) 
  (setv header (header.replace "b" "")) 
  (setv s (+ (+ (+ header "\"\"\"") s) "\"\"\"")) 
- (raise (Py2HyReturnException ((if is_bytestring 
+ ((if is_bytestring 
  hybytes 
- uni_hystring) s)))) 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+ uni_hystring) s)))
 (with_decorator 
  (pg.production "string : PARTIAL_STRING") 
  (defn t_partial_string [p] 
@@ -334,7 +236,7 @@
  (try 
  (do 
  (try 
- [(raise (Py2HyReturnException (HyInteger obj)))] 
+ (raise (Py2HyReturnException (HyInteger obj))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [ValueError] 
@@ -343,23 +245,23 @@
  (try 
  (do 
  (do 
- (setv _py2hy_anon_var_G_1236 (obj.split "/")) 
- (setv lhs (nth _py2hy_anon_var_G_1236 0)) 
- (setv rhs (nth _py2hy_anon_var_G_1236 1))) 
+ (setv _py2hy_anon_var_G_1238 (obj.split "/")) 
+ (setv lhs (nth _py2hy_anon_var_G_1238 0)) 
+ (setv rhs (nth _py2hy_anon_var_G_1238 1))) 
  (raise (Py2HyReturnException (HyExpression [(HySymbol "fraction") (HyInteger lhs) (HyInteger rhs)])))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [ValueError] 
  (do)))) 
  (try 
- [(raise (Py2HyReturnException (HyFloat obj)))] 
+ (raise (Py2HyReturnException (HyFloat obj))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [ValueError] 
  (do))) 
  (when (!= obj "j") 
  (try 
- [(raise (Py2HyReturnException (HyComplex obj)))] 
+ (raise (Py2HyReturnException (HyComplex obj))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [ValueError] 

@@ -37,8 +37,6 @@ Compilation traceback:
  (setv self.source None) 
  (setv self.filename None)) 
  (defn __str__ [self] 
- (try 
- (do 
  (setv line self.expression.start_line) 
  (setv start self.expression.start_column) 
  (setv end self.expression.end_column) 
@@ -52,35 +50,33 @@ Compilation traceback:
  (do 
  (setv length (- (len (get source 0)) start))))) 
  (setv result "") 
- (setv result (+ result (% "  File \"%s\", line %d, column %d
+ (+= result (% "  File \"%s\", line %d, column %d
 
-" (, self.filename line start)))) 
+" (, self.filename line start))) 
  (when (= (len source) 1) 
- (setv result (+ result (% "  %s
-" (colored.red (get source 0))))) 
- (setv result (+ result (% "  %s%s
-" (, (* " " (- start 1)) (colored.green (+ (+ "^" (* "-" (- length 1))) "^"))))))) 
+ (+= result (% "  %s
+" (colored.red (get source 0)))) 
+ (+= result (% "  %s%s
+" (, (* " " (- start 1)) (colored.green (+ (+ "^" (* "-" (- length 1))) "^")))))) 
  (when (> (len source) 1) 
- (setv result (+ result (% "  %s
-" (colored.red (get source 0))))) 
- (setv result (+ result (% "  %s%s
-" (, (* " " (- start 1)) (colored.green (+ "^" (* "-" length))))))) 
+ (+= result (% "  %s
+" (colored.red (get source 0)))) 
+ (+= result (% "  %s%s
+" (, (* " " (- start 1)) (colored.green (+ "^" (* "-" length)))))) 
  (when (> (len source) 2) 
  (for [line (get source (slice 1 (- 1) None))] 
- (setv result (+ result (% "  %s
-" (colored.red ((. "" join) line))))) 
- (setv result (+ result (% "  %s
-" (colored.green (* "-" (len line)))))))) 
- (setv result (+ result (% "  %s
-" (colored.red ((. "" join) (get source (- 1))))))) 
- (setv result (+ result (% "  %s
-" (colored.green (+ (* "-" (- end 1)) "^")))))) 
- (setv result (+ result (colored.yellow (% "%s: %s
+ (+= result (% "  %s
+" (colored.red ((. "" join) line)))) 
+ (+= result (% "  %s
+" (colored.green (* "-" (len line))))))) 
+ (+= result (% "  %s
+" (colored.red ((. "" join) (get source (- 1)))))) 
+ (+= result (% "  %s
+" (colored.green (+ (* "-" (- end 1)) "^"))))) 
+ (+= result (colored.yellow (% "%s: %s
 
-" (, self.__class__.__name__ (self.message.encode "utf-8")))))) 
- (raise (Py2HyReturnException result))) 
- (except [e Py2HyReturnException] 
- e.retvalue))))
+" (, self.__class__.__name__ (self.message.encode "utf-8"))))) 
+ result))
 (defclass HyMacroExpansionError [HyTypeError] 
  (do))
 (defclass HyIOError [HyError IOError] 

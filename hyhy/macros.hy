@@ -57,21 +57,13 @@
     This function is called from the `deftag` special form in the compiler.
 
     " 
- (try 
- (do 
  (defn _ [fn_py2hy_mangling] 
- (try 
- (do 
  (setv module_name fn_py2hy_mangling.__module__) 
  (when (module_name.startswith "hyhy.core") 
  (setv module_name None)) 
  (assoc (get _hy_tag module_name) name fn_py2hy_mangling) 
- (raise (Py2HyReturnException fn_py2hy_mangling))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
- (raise (Py2HyReturnException _))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ fn_py2hy_mangling) 
+ _)
 (defn require_hyhy [source_module target_module &optional [all_macros False] [assignments {}] [prefix ""]] 
  "Load macros from `source_module` in the namespace of
     `target_module`. `assignments` maps old names to new names, but is
@@ -86,16 +78,17 @@
     " 
  (setv seen_names (set)) 
  (when prefix 
- (setv prefix (+ prefix "."))) 
+ (+= prefix ".")) 
  (for [d (, _hy_macros _hy_tag)] 
  (for [[name macro] ((. (get d source_module) items))] 
  (seen_names.add name) 
- (if all_macros 
- (do 
- (assoc (get d target_module) (+ prefix name) macro)) 
- (do 
- (when (in name assignments) 
- (assoc (get d target_module) (+ prefix (get assignments name)) macro)))))) 
+ (cond 
+ [all_macros 
+ (assoc (get d target_module) (+ prefix name) macro)] 
+ [(in name assignments) 
+ (assoc (get d target_module) (+ prefix (get assignments name)) macro)] 
+ [True 
+ (do)]))) 
  (when (not all_macros) 
  (setv unseen ((. (frozenset (assignments.keys)) difference) seen_names)) 
  (when unseen 
@@ -145,16 +138,12 @@
     macros in `tree` until it stops changing.
 
     " 
- (try 
- (do 
  (load_macros compiler.module_name) 
  (setv old None) 
  (while (!= old tree) 
  (setv old tree) 
  (setv tree (macroexpand_1 tree compiler))) 
- (raise (Py2HyReturnException tree))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ tree)
 (defn macroexpand_1 [tree compiler] 
  "Expand the toplevel macro from `tree` once, in the context of
     `module_name`." 
@@ -184,10 +173,10 @@
  (raise e)) 
  (except [e TypeError] 
  (setv msg (+ (+ "expanding `" (str (get tree 0))) "': ")) 
- (setv msg (+ msg ((. ((. (str e) replace) "<lambda>()" "" 1) strip)))) 
+ (+= msg ((. ((. (str e) replace) "<lambda>()" "" 1) strip))) 
  (raise (HyMacroExpansionError tree msg)))) 
  (try 
- [(setv obj (m (unpack_iterable (get ntree (slice 1 None None))) (unpack_mapping opts)))] 
+ (setv obj (m (unpack_iterable (get ntree (slice 1 None None))) (unpack_mapping opts))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [e HyTypeError] 
@@ -211,7 +200,7 @@
  (setv tag_macro ((. (get _hy_tag compiler.module_name) get) tag)) 
  (when (is tag_macro None) 
  (try 
- [(setv tag_macro (get (get _hy_tag None) tag))] 
+ (setv tag_macro (get (get _hy_tag None) tag)) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [KeyError] 

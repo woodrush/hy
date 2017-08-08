@@ -6,15 +6,9 @@
 (import [hyhy.lex [LexException PrematureEndOfInput tokenize]])
 (import [pytest])
 (defn peoi [] 
- (try 
- [(raise (Py2HyReturnException (pytest.raises PrematureEndOfInput)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (pytest.raises PrematureEndOfInput))
 (defn lexe [] 
- (try 
- [(raise (Py2HyReturnException (pytest.raises LexException)))] 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (pytest.raises LexException))
 (defn test_lex_exception [] 
  " Ensure tokenize throws a fit on a partial input " 
  (with [(peoi)] (tokenize "(foo")) 
@@ -83,18 +77,10 @@ bc\"
  (assert (= (tokenize "-INF") [(HySymbol "_INF")])))
 (defn test_lex_expression_complex [] 
  " Make sure expressions can produce complex " 
- (try 
- (do 
  (defn t [x] 
- (try 
- [(raise (Py2HyReturnException (tokenize ((. "(foo {})" format) x))))] 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ (tokenize ((. "(foo {})" format) x))) 
  (defn f [x] 
- (try 
- [(raise (Py2HyReturnException [(HyExpression [(HySymbol "foo") x])]))] 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ [(HyExpression [(HySymbol "foo") x])]) 
  (assert (= (t "2.j") (f (HyComplex 2j)))) 
  (assert (= (t "-0.5j") (f (HyComplex (- 0.5j))))) 
  (assert (= (t "1.e7j") (f (HyComplex 10000000j)))) 
@@ -103,9 +89,7 @@ bc\"
  (assert (= (t "nanj") (f (HySymbol "nanj")))) 
  (assert (= (t "Inf+Infj") (f (HyComplex (complex (float "inf") (float "inf")))))) 
  (assert (= (t "Inf-Infj") (f (HyComplex (complex (float "inf") (float "-inf")))))) 
- (assert (= (t "Inf-INFj") (f (HySymbol "Inf_INFj"))))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (assert (= (t "Inf-INFj") (f (HySymbol "Inf_INFj")))))
 (defn test_lex_digit_separators [] 
  (assert (= (tokenize "1_000_000") [(HyInteger 1000000)])) 
  (assert (= (tokenize "1,000,000") [(HyInteger 1000000)])) 

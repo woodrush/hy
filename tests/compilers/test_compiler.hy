@@ -13,7 +13,7 @@
  (assert (callable (compiler.builds "foo_bar"))) 
  (assert (callable (compiler.builds "-"))) 
  (try 
- [(compiler.builds "foobar-with-dash-")] 
+ (compiler.builds "foobar-with-dash-") 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [e TypeError] 
@@ -22,16 +22,12 @@
  (except [e Py2HyReturnException] 
  e.retvalue)))
 (defn make_expression [&rest args] 
- (try 
- (do 
  (setv h (HyExpression args)) 
  (setv h.start_line 1) 
  (setv h.end_line 1) 
  (setv h.start_column 1) 
  (setv h.end_column 1) 
- (raise (Py2HyReturnException (h.replace h)))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (h.replace h))
 (defn test_compiler_bare_names [] 
  "
     Check that the compiler doesn't drop bare names from code branches
@@ -53,8 +49,6 @@
     should not generate a return statement. From 3.3 onwards a return
     value should be generated.
     " 
- (try 
- (do 
  (setv e (make_expression (HySymbol "fn") (HyList) (HyExpression [(HySymbol "yield") (HyInteger 2)]) (HyExpression [(HySymbol "+") (HyInteger 1) (HyInteger 1)]))) 
  (setv ret ((. (compiler.HyASTCompiler "test") compile_function_def) e)) 
  (assert (= (len ret.stmts) 1)) 
@@ -72,6 +66,4 @@
  (assert (isinstance (. (get body 1) value) ast.BinOp))) 
  (do 
  (assert (isinstance (get body 1) ast.Expr)) 
- (assert (isinstance (. (get body 1) value) ast.BinOp))))) 
- (except [e Py2HyReturnException] 
- e.retvalue)))
+ (assert (isinstance (. (get body 1) value) ast.BinOp)))))

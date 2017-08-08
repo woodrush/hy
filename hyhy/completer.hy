@@ -11,7 +11,7 @@
 (import [builtins])
 (setv docomplete True)
 (try 
- [(import [readline])] 
+ (import [readline]) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [ImportError] 
@@ -47,9 +47,9 @@
  (if m 
  (do 
  (do 
- (setv _py2hy_anon_var_G_1235 (m.group 1 3)) 
- (setv expr (nth _py2hy_anon_var_G_1235 0)) 
- (setv attr (nth _py2hy_anon_var_G_1235 1))) 
+ (setv _py2hy_anon_var_G_1236 (m.group 1 3)) 
+ (setv expr (nth _py2hy_anon_var_G_1236 0)) 
+ (setv attr (nth _py2hy_anon_var_G_1236 1))) 
  (setv attr (attr.replace "-" "_")) 
  (setv expr (expr.replace "-" "_"))) 
  (do 
@@ -71,8 +71,6 @@
  (except [e Py2HyReturnException] 
  e.retvalue))) 
  (defn global_matches [self text] 
- (try 
- (do 
  (setv matches []) 
  (for [p self.path] 
  (for [k (p.keys)] 
@@ -80,12 +78,8 @@
  (setv k (k.replace "_" "-")) 
  (when (k.startswith text) 
  (matches.append k))))) 
- (raise (Py2HyReturnException matches))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ matches) 
  (defn tag_matches [self text] 
- (try 
- (do 
  (setv text (get text (slice 1 None None))) 
  (setv matches []) 
  (for [p self.tag_path] 
@@ -93,23 +87,19 @@
  (when (isinstance k string_types) 
  (when (k.startswith text) 
  (matches.append ((. "#{}" format) k)))))) 
- (raise (Py2HyReturnException matches))) 
- (except [e Py2HyReturnException] 
- e.retvalue))) 
+ matches) 
  (defn complete [self text state] 
  (try 
  (do 
- (if (text.startswith "#") 
- (do 
- (setv matches (self.tag_matches text))) 
- (do 
- (if (in "." text) 
- (do 
- (setv matches (self.attr_matches text))) 
- (do 
- (setv matches (self.global_matches text)))))) 
+ (cond 
+ [(text.startswith "#") 
+ (setv matches (self.tag_matches text))] 
+ [(in "." text) 
+ (setv matches (self.attr_matches text))] 
+ [True 
+ (setv matches (self.global_matches text))]) 
  (try 
- [(raise (Py2HyReturnException (get matches state)))] 
+ (raise (Py2HyReturnException (get matches state))) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [IndexError] 
@@ -130,14 +120,14 @@
  (setv history (os.path.expanduser "~/.hyhy-history")) 
  (readline.parse_and_bind "set blink-matching-paren on") 
  (try 
- [(readline.read_history_file history)] 
+ (readline.read_history_file history) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (except [IOError] 
  ((. (open history "a") close)))) 
  (readline.parse_and_bind readline_bind)) 
  (try 
- [(yield)] 
+ (yield) 
  (except [e Py2HyReturnException] 
  (raise e)) 
  (finally (when docomplete 
